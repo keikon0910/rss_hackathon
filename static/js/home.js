@@ -14,8 +14,56 @@ let lastUserPos = null;
 // ====== ユーティリティ ======
 function popupHTML(feature) {
   const name = feature.properties?.name ?? "ランドマーク";
-  return `<strong>${name}</strong>`;
+  let html = `<strong>${name}</strong>`;
+
+  // 作成日がある場合は表示
+  if (feature.properties?.created_at) {
+    const createdAt = new Date(feature.properties.created_at);
+    html += `<br><small>作成日: ${createdAt.toLocaleString()}</small>`;
+  }
+
+  return html;
 }
+
+// ====== ランドマーククリック時の処理 ======
+function onLandmarkClick(feature) {
+  console.log("ランドマークがクリックされました:", feature); // ← デバッグ用ログ
+
+  const name = feature.properties?.name ?? "ランドマーク";
+  const createdAtStr = feature.properties?.created_at ?? null;
+
+  let createdAtText = "作成日情報なし";
+  if (createdAtStr) {
+    const createdAt = new Date(createdAtStr);
+    createdAtText = createdAt.toLocaleString();
+  }
+
+  const infoP = document.getElementById("landmark-info");
+  if (infoP) {
+    infoP.textContent = `${name}（作成日: ${createdAtText}）`;
+    console.log("情報を <p> に表示:", infoP.textContent); // ← デバッグ用ログ
+  } else {
+    console.warn("<p> 要素が見つかりません");
+  }
+
+  // 下のパネルも表示する場合
+  const panel = document.getElementById("landmark-panel");
+  if (panel) {
+    panel.classList.remove("hidden");
+    console.log("ランドマークパネルを表示");
+  }
+}
+
+// ====== landmarkLayer 作成時にクリックイベント登録 ======
+if (landmarkLayer) {
+  landmarkLayer.eachLayer((layer) => {
+    layer.on("click", () => onLandmarkClick(layer.feature));
+  });
+} else {
+  console.warn("ランドマークレイヤーが存在しません");
+}
+
+
 
 function updateUserMarker(lat, lon, acc) {
   const latlng = [lat, lon];
@@ -144,3 +192,52 @@ if (navigator.geolocation) {
   const msgEl = document.getElementById("cta-msg");
   if (msgEl) msgEl.textContent = "この端末は位置情報に未対応です";
 }
+
+// ====== landmarkLayer クリック時の情報表示 ======
+function setupLandmarkClickEvents() {
+  if (!landmarkLayer) {
+    console.warn("ランドマークレイヤーが存在しません");
+    return;
+  }
+
+  landmarkLayer.eachLayer((layer) => {
+    layer.on("click", () => {
+      const f = layer.feature;
+      console.log("ランドマークがクリックされました:", f);
+
+      const name = f.properties?.name ?? "ランドマーク";
+      const createdAtStr = f.properties?.created_at ?? null;
+      const createdAtText = createdAtStr ? new Date(createdAtStr).toLocaleString() : "作成日情報なし";
+
+      // <h2 id="lmName"> にランドマーク名を表示
+      const lmName = document.getElementById("lmName");
+      if (lmName) {
+        lmName.textContent = name;
+        console.log("<h2> に表示:", lmName.textContent);
+      }
+
+      // <p id="landmark-info"> に作成日を表示
+      const infoP = document.getElementById("landmark-info");
+      if (infoP) {
+        infoP.textContent = `作成日: ${createdAtText}`;
+        console.log("<p> に表示:", infoP.textContent);
+      }
+
+      // 投稿ボタンのリンクを更新
+      const postLink = document.getElementById("postLink");
+      if (postLink) {
+        postLink.href = `/photograph/post?landmark_id=${f.id}`;
+        console.log("投稿リンクを更新:", postLink.href);
+      }
+
+      // 下のパネルを表示
+      const panel = document.getElementById("landmark-panel");
+      if (panel) panel.classList.remove("hidden");
+    });
+  });
+}
+
+// landmarks を読み込んだ後に呼び出す
+loadLandmarks().then(() => {
+  setupLandmarkClickEvents();
+});
