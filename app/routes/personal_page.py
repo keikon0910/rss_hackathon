@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template , session, redirect, url_for, flash
+from flask import Blueprint, render_template , session, redirect, url_for, flash, request
 import psycopg2
 from werkzeug.security import check_password_hash
 
@@ -157,3 +157,30 @@ def personal_setting():
         flash(f"ユーザー情報の取得に失敗しました: {e}", "error")
 
     return render_template('personal_setting.html', user=user_data)
+
+@personal_page_bp.route('/search_users', methods=['GET', 'POST'])
+def search_users():
+    users = []
+    query = ""
+
+    if request.method == 'POST':
+        query = request.form.get('username', '').strip()
+
+        if query:
+            try:
+                conn = get_db_connection()
+                cur = conn.cursor()
+                cur.execute("""
+                    SELECT id, display_name, icon
+                    FROM users
+                    WHERE display_name ILIKE %s
+                    ORDER BY display_name
+                """, (f"%{query}%",))
+                rows = cur.fetchall()
+                users = [{"id": r[0], "name": r[1], "icon": r[2] or ""} for r in rows]
+                cur.close()
+                conn.close()
+            except Exception as e:
+                flash(f"検索エラー: {e}", "error")
+
+    return render_template('search_users.html', users=users, query=query)
