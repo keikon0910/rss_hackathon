@@ -36,17 +36,65 @@ function onLandmarkClick(feature) {
   const panel = document.getElementById("landmark-panel");
   if (panel) panel.classList.remove("hidden");
 
-  // 「この場所の投稿を見る」リンクをページ遷移用にセット
+  // 「この場所に投稿する」リンク
+  const postLink = document.getElementById("postLink");
+  if (postLink) {
+    postLink.href = `/photograph/post?landmark_id=${feature.id}`;
+    postLink.style.display = "inline-block";
+  }
+
+  // 「この場所の投稿を見る」リンク初期設定（無効化）
   const readLink = document.getElementById("readLink");
   if (readLink) {
-    readLink.href = `/others/others_post/${feature.id}`;
+    readLink.dataset.href = `/others/others_post/${feature.id}`; // 後で有効化用
+    readLink.href = "#";
+    readLink.style.pointerEvents = "none"; // クリック無効化
+    readLink.style.opacity = "0.5";       // グレーアウト
     readLink.style.display = "inline-block";
   }
 
-  // 「この場所に投稿する」リンク（任意）
-  const postLink = document.getElementById("postLink");
-  if (postLink) postLink.href = `/photograph/post?landmark_id=${feature.id}`;
-  if (postLink) postLink.style.display = "inline-block";
+  // ユーザーがランドマーク内ならリンク有効化
+  if (lastUserPos && readLink) {
+    const { lat, lon, acc } = lastUserPos;
+    const inside = checkInsideAny(lon, lat, acc).some(f => f.id === feature.id);
+    if (inside) {
+      readLink.style.pointerEvents = "auto";
+      readLink.style.opacity = "1";
+      readLink.href = readLink.dataset.href;
+    }
+  }
+}
+
+// ====== CTA切替（青いボタン or メッセージ） ======
+function setCTA(matches) {
+  const linkEl = document.getElementById("cta-link");
+  const nameEl = document.getElementById("cta-name");
+  const msgEl = document.getElementById("cta-msg");
+  const readLink = document.getElementById("readLink");
+
+  if (!linkEl || !nameEl || !msgEl || !readLink) return;
+
+  if (matches.length > 0) {
+    const f = matches[0];
+    const name = f.properties?.name ?? "ランドマーク";
+    nameEl.textContent = name;
+    linkEl.href = `/photograph/post?landmark_id=${f.id}`;
+    linkEl.style.display = "inline-block";
+    msgEl.style.display = "none";
+
+    // 投稿閲覧リンクも有効化
+    readLink.style.pointerEvents = "auto";
+    readLink.style.opacity = "1";
+    readLink.href = readLink.dataset.href ?? "#";
+  } else {
+    linkEl.style.display = "none";
+    msgEl.style.display = "inline";
+
+    // 投稿閲覧リンク無効化
+    readLink.style.pointerEvents = "none";
+    readLink.style.opacity = "0.5";
+    readLink.href = "#";
+  }
 }
 
 // ====== ユーザー位置マーカー更新 ======
