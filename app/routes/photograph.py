@@ -23,12 +23,45 @@ def get_db_connection():
     return psycopg2.connect(**DB_PARAMS)
 
 
-@photograph_bp.route('/past_post')
-def past_post():
+@photograph_bp.route('/past_post/<int:post_id>')
+def past_post(post_id):
     if 'user_id' not in session:
         flash("ログインが必要です", "error")
         return redirect(url_for('index.login'))
-    return render_template('past_post.html')
+
+    post_data = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # 投稿詳細を取得
+        cur.execute("""
+            SELECT p.id, p.title, p.image_url, p.created_at, u.display_name
+            FROM posts p
+            JOIN users u ON p.user_id = u.id
+            WHERE p.id=%s AND p.user_id=%s
+        """, (post_id, session['user_id']))
+        row = cur.fetchone()
+        if row:
+            post_data = {
+                'id': row[0],
+                'title': row[1],
+                'image_url': row[2],
+                'created_at': row[3].strftime("%Y/%m/%d %H:%M"),
+                'user_name': row[4]
+            }
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        flash(f"投稿データ取得エラー: {e}", "error")
+
+    if not post_data:
+        flash("投稿が見つかりません", "error")
+        return redirect(url_for('personal_page.personal_page'))
+
+    return render_template('post_past.html', post=post_data)
+
 
 
 @photograph_bp.route('/post', methods=['GET', 'POST'])
