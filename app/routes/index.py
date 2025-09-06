@@ -3,6 +3,7 @@ from flask import Blueprint, render_template
 index_bp = Blueprint('index',__name__,url_prefix='/',template_folder='../templates' )
 
 
+
 @index_bp.route('/')
 def home():
     return render_template('index/index.html')
