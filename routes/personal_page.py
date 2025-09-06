@@ -7,6 +7,6 @@ persponal_page_bp = Blueprint('personal_page', __name__, url_prefix='/', templat
 def personal_page():
     return render_template('personal_page/personal_page.html')
 
-@persponal_page_bp.route('/personal_page/personal_settings')
+@persponal_page_bp.route('/personal_settings')
 def personal_settings():
     return render_template('personal_page/personal_settings.html')  
