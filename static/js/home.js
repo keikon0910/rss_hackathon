@@ -1,60 +1,135 @@
-// 地図
-const map = L.map('map', { zoomControl: true }).setView([35.681236, 139.767125], 15);
-
-L.tileLayer('https://osm.gdl.jp/styles/osm-bright-ja/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: "© OpenStreetMap contributors, GDL.jp"
+// ====== Leaflet: 地図初期化 ======
+const map = L.map("map").setView([35.68, 139.76], 13);
+L.tileLayer("https://osm.gdl.jp/styles/osm-bright-ja/{z}/{x}/{y}.png", {
+  attribution: "© OpenStreetMap contributors, GDL.jp",
 }).addTo(map);
 
-// ← 追加：サイドパネル更新関数（地図横に表示）
-function showPanel(id, name) {
-  const panel = document.getElementById('landmark-panel');
-  if (!panel) return; // パネルが無い環境でも安全に
+// ====== 状態 ======
+let landmarkLayer = null;
+let landmarksGeoJSON = null;
+let userMarker = null;
+let accuracyCircle = null;
+let lastUserPos = null;
 
-  panel.classList.remove('hidden');
-  document.getElementById('lmName').textContent = name || 'この場所';
-  document.getElementById('postLink').href = `/landmarks/${id}/new`;
-  document.getElementById('readLink').href = `/landmarks/${id}`;
+// ====== ユーティリティ ======
+function popupHTML(feature) {
+  const name = feature.properties?.name ?? "ランドマーク";
+  return `<strong>${name}</strong>`;
 }
 
-fetch('/api/landmarks')
-  .then(r => r.json())
-  .then(fc => {
-    const landmarksLayer = L.geoJSON(fc, {
-      style: { color: '#4f46e5', weight: 2, fillOpacity: 0.12 },
-      onEachFeature: (feature, layer) => {
-        const id   = feature.id;
-        const name = feature.properties?.name ?? 'この場所';
+function updateUserMarker(lat, lon, acc) {
+  const latlng = [lat, lon];
+  if (!userMarker) {
+    userMarker = L.marker(latlng).addTo(map).bindPopup("あなたの位置");
+  } else {
+    userMarker.setLatLng(latlng);
+  }
+  if (!accuracyCircle) {
+    accuracyCircle = L.circle(latlng, { radius: acc }).addTo(map);
+  } else {
+    accuracyCircle.setLatLng(latlng);
+    accuracyCircle.setRadius(acc);
+  }
+}
 
-        // ▼ ここだけ変更（ポップアップはやめてサイドパネルに出す）
-        layer.on('click', () => {
-          showPanel(id, name);
+// CTA（青いボタン or メッセージ）を切り替え
+function setCTA(matches) {
+  const linkEl = document.getElementById("cta-link");
+  const nameEl = document.getElementById("cta-name");
+  const msgEl = document.getElementById("cta-msg");
 
-          // モバイルでサイドパネルが下に出る場合の視線移動用（任意）
-          const panel = document.getElementById('landmark-panel');
-          if (panel && window.matchMedia('(max-width: 1023px)').matches) {
-            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        });
+  if (!linkEl || !nameEl || !msgEl) return;
 
-        // （必要なら従来のポップアップを残すなら下記をアンコメント）
-        // const popupHtml = `
-        //   <div class="space-y-2">
-        //     <div class="font-semibold">${name}</div>
-        //     <a class="inline-block px-3 py-1 bg-indigo-600 text-white rounded"
-        //        href="/landmarks/${id}/new">この場所で投稿</a>
-        //     <a class="inline-block px-3 py-1 bg-white border rounded ml-2"
-        //        href="/landmarks/${id}">投稿を読む</a>
-        //   </div>`;
-        // layer.bindPopup(popupHtml);
+  if (matches.length > 0) {
+    const f = matches[0];
+    const name = f.properties?.name ?? "ランドマーク";
+    nameEl.textContent = name;
+
+    // Flask 側の投稿ページへ。landmark_id はクエリに追加
+    linkEl.href = `/photograph/post?landmark_id=${f.id}`;
+    linkEl.style.display = "inline-block";
+    msgEl.style.display = "none";
+  } else {
+    linkEl.style.display = "none";
+    msgEl.style.display = "inline";
+  }
+}
+
+// 点がランドマーク内か判定
+function checkInsideAny(lon, lat, accuracyMeters = 30) {
+  if (!landmarksGeoJSON || !landmarksGeoJSON.features) return [];
+  const pt = turf.point([lon, lat]);
+  const bufferKm = Math.max(accuracyMeters, 30) / 1000;
+
+  const hits = [];
+  for (const f of landmarksGeoJSON.features) {
+    let inside = false;
+    try {
+      inside = turf.booleanPointInPolygon(pt, f);
+      if (!inside) {
+        const buffered = turf.buffer(f, bufferKm, { units: "kilometers" });
+        inside = turf.booleanPointInPolygon(pt, buffered);
       }
+    } catch (_) {}
+    if (inside) hits.push(f);
+  }
+  return hits;
+}
+
+// ====== ランドマークを読み込んで描画 ======
+async function loadLandmarks() {
+  try {
+    const res = await fetch("/api/landmarks");
+    const geojson = await res.json();
+
+    if (!geojson || geojson.type !== "FeatureCollection") {
+      console.error("Invalid /api/landmarks payload:", geojson);
+      return;
+    }
+
+    landmarksGeoJSON = geojson;
+
+    if (landmarkLayer) map.removeLayer(landmarkLayer);
+    landmarkLayer = L.geoJSON(geojson, {
+      style: { color: "#2563eb", weight: 2, fillOpacity: 0.15 },
+      onEachFeature: (f, layer) => layer.bindPopup(popupHTML(f)),
     }).addTo(map);
 
-    try {
-      map.fitBounds(landmarksLayer.getBounds(), { padding: [20,20] });
-    } catch(_) {}
-  })
-  .catch(err => {
-    console.error(err);
-    alert('ランドマークの取得に失敗しました');
+    const b = landmarkLayer.getBounds();
+    if (b.isValid()) map.fitBounds(b.pad(0.2));
+
+    // 再判定
+    if (lastUserPos) {
+      const { lat, lon, acc } = lastUserPos;
+      setCTA(checkInsideAny(lon, lat, acc));
+    }
+  } catch (e) {
+    console.error("Failed to load landmarks:", e);
+  }
+}
+loadLandmarks();
+
+// ====== Geolocation ======
+function onGeoSuccess(pos) {
+  const { latitude, longitude, accuracy } = pos.coords;
+  updateUserMarker(latitude, longitude, accuracy);
+  lastUserPos = { lat: latitude, lon: longitude, acc: accuracy };
+  setCTA(checkInsideAny(longitude, latitude, accuracy));
+}
+
+function onGeoError(err) {
+  console.warn("Geolocation error:", err);
+  const msgEl = document.getElementById("cta-msg");
+  if (msgEl) msgEl.textContent = `位置情報が取得できません（${err.message}）`;
+}
+
+if (navigator.geolocation) {
+  navigator.geolocation.watchPosition(onGeoSuccess, onGeoError, {
+    enableHighAccuracy: true,
+    maximumAge: 10_000,
+    timeout: 10_000,
   });
+} else {
+  const msgEl = document.getElementById("cta-msg");
+  if (msgEl) msgEl.textContent = "この端末は位置情報に未対応です";
+}
