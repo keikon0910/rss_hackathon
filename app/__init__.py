@@ -3,19 +3,16 @@ from flask import Flask
 from .db import init_db_pool
 
 def create_app():
-    app = Flask(
-        __name__,
-        template_folder="../templates",  # ← app/ と同階層の templates/
-        static_folder="../static",      # ← app/ と同階層の static/
-    )
-
+    app = Flask(__name__, template_folder="../templates", static_folder="../static")
     app.config["SECRET_KEY"] = os.getenv("APP_SECRET", "dev")
     app.config["DATABASE_URL"] = os.getenv("DATABASE_URL")
 
     init_db_pool(app.config["DATABASE_URL"])
 
+    # ★ ここを相対importに直す
+    from .routes.index import index_bp
     from .routes.home import home_bp
-    # index は今は登録しない（A案でオフにしている想定）
-    app.register_blueprint(home_bp)
 
+    app.register_blueprint(index_bp)
+    app.register_blueprint(home_bp)
     return app
