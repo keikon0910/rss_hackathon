@@ -88,15 +88,13 @@ def personal_page():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
+        current_user_id = session['user_id']
 
         # ユーザー情報
-        cur.execute("SELECT display_name, icon FROM users WHERE id=%s", (session['user_id'],))
+        cur.execute("SELECT display_name, icon FROM users WHERE id=%s", (current_user_id,))
         row = cur.fetchone()
         if row:
-            user_data = {
-                'display_name': row[0],
-                'icon': row[1] or ''
-            }
+            user_data = {'display_name': row[0], 'icon': row[1] or ''}
 
         # 投稿一覧
         cur.execute("""
@@ -104,32 +102,37 @@ def personal_page():
             FROM posts
             WHERE user_id=%s
             ORDER BY created_at DESC
-        """, (session['user_id'],))
+        """, (current_user_id,))
         posts = [
             {'id': r[0], 'title': r[1], 'image_url': r[2], 'created_at': r[3].strftime("%Y/%m/%d %H:%M")}
             for r in cur.fetchall()
         ]
 
         # 投稿数
-        cur.execute("SELECT COUNT(*) FROM posts WHERE user_id=%s", (session['user_id'],))
+        cur.execute("SELECT COUNT(*) FROM posts WHERE user_id=%s", (current_user_id,))
         post_count = cur.fetchone()[0]
 
-        # フォロー数とフォロワー数
-        current_user_id = session['user_id']
-
-        # 自分がフォローしている人数
+        # 🔹 フォロー数（自分が承認済みでフォローしている数 + 未承認リクエスト中もカウントする場合は追加可能）
         cur.execute("""
-            SELECT COUNT(*) FROM user_follow uf
-            WHERE uf.follower_uid = %s
+            SELECT COUNT(*) FROM user_follow
+            WHERE follower_uid = %s
         """, (current_user_id,))
         following_count = cur.fetchone()[0]
 
-        # 自分をフォローしている人数
+        # 🔹 フォロワー数（自分を承認済みでフォローしている人数）
         cur.execute("""
-            SELECT COUNT(*) FROM user_follow uf
-            WHERE uf.followee_uid = %s
+            SELECT COUNT(*) FROM user_follow
+            WHERE followee_uid = %s
         """, (current_user_id,))
         followers_count = cur.fetchone()[0]
+
+        # 🔹 片方向フォロー（未承認リクエストがある場合）を反映させる場合は以下を追加可能
+        cur.execute("""
+            SELECT COUNT(*) FROM follow_requests
+           WHERE receiver_uid = %s AND status='pending'
+        """, (current_user_id,))
+        pending_followers = cur.fetchone()[0]
+        followers_count += pending_followers
 
         cur.close()
         conn.close()
@@ -145,6 +148,7 @@ def personal_page():
         followers=followers_count,
         following=following_count
     )
+
 
 
 @personal_page_bp.route('/personal_setting')
