@@ -204,43 +204,53 @@ function setupLandmarkClickEvents() {
   landmarkLayer.eachLayer((layer) => {
     layer.on("click", () => {
       const f = layer.feature;
-      console.log("ランドマークがクリックされました:", f);
-
       const name = f.properties?.name ?? "ランドマーク";
       const createdAtStr = f.properties?.created_at ?? null;
       const createdAtText = createdAtStr ? new Date(createdAtStr).toLocaleString() : "作成日情報なし";
 
-      // <h2 id="lmName"> にランドマーク名を表示
+      // パネル表示
       const lmName = document.getElementById("lmName");
-      if (lmName) {
-        lmName.textContent = name;
-        console.log("<h2> に表示:", lmName.textContent);
-      }
+      if (lmName) lmName.textContent = name;
 
-      // <p id="landmark-info"> に作成日を表示
       const infoP = document.getElementById("landmark-info");
-      if (infoP) {
-        infoP.textContent = `作成日: ${createdAtText}`;
-        console.log("<p> に表示:", infoP.textContent);
-      }
+      if (infoP) infoP.textContent = `作成日: ${createdAtText}`;
 
-      // 投稿ボタンは非表示または無効化（表示させない）
-      const postLink = document.getElementById("postLink");
-      if (postLink) {
-        postLink.style.display = "none"; // 完全に非表示にする
-        // もし表示したいけど遷移させたくない場合:
-        // postLink.href = "#";
-        // postLink.onclick = (e) => e.preventDefault();
-      }
-
-      // 下のパネルを表示
       const panel = document.getElementById("landmark-panel");
       if (panel) panel.classList.remove("hidden");
+
+      // ← ここが重要
+      const readLink = document.getElementById("readLink");
+      if (readLink) {
+        readLink.dataset.landmarkId = f.id;          // data-landmark-id に保存
+        readLink.href = "#";                         // デフォルト無効
+      }
     });
   });
 }
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const readLink = document.getElementById("readLink");
+
+  readLink.addEventListener("click", (e) => {
+    e.preventDefault();  // href="#" の遷移を止める
+
+    const lmId = readLink.dataset.landmarkId;    // クリックされたランドマークID
+    if (!lmId) {
+      alert("ランドマークが選択されていません");
+      return;
+    }
+
+    // 選択されたランドマークの投稿ページへ遷移
+    window.location.href = `/others_post?landmark_id=${lmId}`;
+  });
+});
+
+
 
 // landmarks を読み込んだ後に呼び出す
 loadLandmarks().then(() => {
   setupLandmarkClickEvents();
 });
+
+

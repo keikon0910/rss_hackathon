@@ -29,26 +29,32 @@
 </header>
 
 <main class="container mx-auto px-4 py-6 space-y-4">
-  {% for post in posts %}
-  <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-      <div class="p-3 flex items-center space-x-3">
+  {% if posts %}
+    {% for post in posts %}
+      <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+        <div class="p-3 flex items-center space-x-3">
           <div class="bg-gray-300 w-10 h-10 rounded-full"></div>
           <p class="font-semibold text-gray-800">{{ post.user_name }}</p>
-      </div>
+        </div>
 
-      {% if post.image_url %}
-      <img src="data:image/*;base64,{{ post.image_url }}" alt="投稿画像" class="w-full h-64 object-cover">
-      {% else %}
-      <div class="w-full h-64 bg-gray-200 grid place-items-center text-gray-500">No Image</div>
-      {% endif %}
+        {% if post.image_url %}
+          <img src="data:image/*;base64,{{ post.image_url }}" alt="投稿画像" class="w-full h-64 object-cover">
+        {% else %}
+          <div class="w-full h-64 bg-gray-200 grid place-items-center text-gray-500">No Image</div>
+        {% endif %}
 
-      <div class="p-4">
+        <div class="p-4">
           <h1 class="text-xl font-bold">{{ post.title }}</h1>
           <p class="text-gray-500 text-sm mt-1">{{ post.created_at }}</p>
+          <p class="text-gray-700 mt-2">{{ post.body }}</p>
+        </div>
       </div>
-  </div>
-  {% endfor %}
+    {% endfor %}
+  {% else %}
+    <p class="text-gray-500">このランドマークにはまだ投稿がありません。</p>
+  {% endif %}
 </main>
+
 
 
 </body>
