@@ -4,9 +4,10 @@ from flask import Blueprint, render_template
 personal_page_bp = Blueprint(
     'personal_page',
     __name__,
-    template_folder='../../templates/personal_page',
-    url_prefix=''
+    url_prefix='',
+    template_folder='../../templates/personal_page'
 )
+
 
 @personal_page_bp.route('/personal_page')
 def personal_page():
