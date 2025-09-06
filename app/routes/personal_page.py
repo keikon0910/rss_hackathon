@@ -60,7 +60,7 @@ def personal_page():
 
 @personal_page_bp.route('/personal_setting')
 def personal_setting():
-    if 'u_id' not in session:
+    if 'user_id' not in session:
         flash("ログインが必要です", "error")
         return redirect(url_for('index.login'))
 
@@ -69,16 +69,19 @@ def personal_setting():
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute("""
-            SELECT display_name, email, created_at
+            SELECT id, display_name, email, icon, is_public, created_at
             FROM users
             WHERE id = %s
-        """, (session['u_id'],))
+        """, (session['user_id'],))
         row = cur.fetchone()
         if row:
             user_data = {
-                'display_name': row[0],
-                'email': row[1],
-                'created_at': row[2]
+                'id': row[0],
+                'display_name': row[1],
+                'email': row[2],
+                'icon': row[3] if row[3] else '',
+                'is_public': row[4],
+                'created_at': row[5]
             }
         cur.close()
         conn.close()
