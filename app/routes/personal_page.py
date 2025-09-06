@@ -162,17 +162,16 @@ def personal_setting():
 @personal_page_bp.route('/search_users', methods=['GET', 'POST'])
 def search_users():
     users = []
-    query = request.args.get('username', '').strip()  # 🔹検索用はGETパラメータで管理
+    query = request.args.get('username', '').strip()
     current_user_id = session.get('user_id')
 
     try:
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # 🔹フォローボタン押下時（POST）
+        # フォローボタン押下時（POST）
         if request.method == 'POST':
             follow_user_id = request.form.get('follow_user_id')
-
             if follow_user_id and current_user_id:
                 try:
                     cur.execute("""
@@ -193,27 +192,35 @@ def search_users():
                     conn.rollback()
                     flash(f"フォローリクエスト送信エラー: {e}", "error")
 
-        # 🔹ユーザー検索
+        # ユーザー検索
         if query:
             cur.execute("""
                 SELECT u.id, u.display_name, u.icon,
                        CASE 
-                           WHEN fr.status = 'pending' THEN TRUE
+                           WHEN uf.follower_uid IS NOT NULL THEN TRUE  -- 相互フォロー済み
+                           ELSE FALSE
+                       END AS is_followed,
+                       CASE 
+                           WHEN fr.status = 'pending' THEN TRUE       -- フォローリクエスト送信済み
                            ELSE FALSE
                        END AS is_pending
                 FROM users u
                 LEFT JOIN follow_requests fr
                     ON fr.sender_uid = %s AND fr.receiver_uid = u.id
+                LEFT JOIN user_follow uf
+                    ON uf.follower_uid = %s AND uf.followee_uid = u.id
                 WHERE u.display_name ILIKE %s
+                  AND u.id <> %s  -- 自分自身は除外
                 ORDER BY u.display_name
-            """, (current_user_id, f"%{query}%"))
+            """, (current_user_id, current_user_id, f"%{query}%", current_user_id))
             rows = cur.fetchall()
 
             users = [{
                 "id": r[0],
                 "name": r[1],
                 "icon": r[2] or "",
-                "is_pending": r[3]
+                "is_followed": r[3],
+                "is_pending": r[4]
             } for r in rows]
 
         cur.close()

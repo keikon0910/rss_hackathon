@@ -59,7 +59,12 @@
       <!-- 🔹 フォローボタン -->
       <form method="POST">
         <input type="hidden" name="follow_user_id" value="{{ u.id }}">
-        {% if u.is_pending %}
+        {% if u.is_followed %}
+          <button type="button" disabled
+            class="px-3 py-1 bg-gray-300 text-black rounded-lg text-sm cursor-not-allowed">
+            フォロー済み
+          </button>
+        {% elif u.is_pending_or_followed %}
           <button type="button" disabled
             class="px-3 py-1 bg-gray-300 text-black rounded-lg text-sm cursor-not-allowed">
             承認待ち
@@ -71,6 +76,7 @@
           </button>
         {% endif %}
       </form>
+
     </li>
     {% endfor %}
   </ul>
