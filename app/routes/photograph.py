@@ -63,7 +63,6 @@ def past_post(post_id):
     return render_template('post_past.html', post=post_data)
 
 
-
 @photograph_bp.route('/post', methods=['GET', 'POST'])
 def post():
     if 'user_id' not in session:
@@ -73,10 +72,16 @@ def post():
     if request.method == 'POST':
         title = request.form.get('title')
         photo = request.files.get('photo')  # 画像取得
+        landmark_id = request.form.get('landmark_id')  # ← JSでセットしたIDを取得
 
         # タイトル必須チェック
         if not title:
             flash("タイトルを入力してください", "error")
+            return render_template('post.html')
+
+        # ランドマーク必須チェック
+        if not landmark_id:
+            flash("現在いるランドマーク内でのみ投稿できます", "error")
             return render_template('post.html')
 
         try:
@@ -92,11 +97,12 @@ def post():
             cur = conn.cursor()
             cur.execute("""
                 INSERT INTO posts (user_id, landmark_id, title, body, image_url, created_at)
-                VALUES (%s, NULL, %s, '', %s, %s)
+                VALUES (%s, %s, %s, '', %s, %s)
             """, (
                 session['user_id'],
+                int(landmark_id),   # ← landmark_id を挿入
                 title,
-                image_base64,  # 画像があれば Base64、なければ NULL
+                image_base64,       # 画像があれば Base64、なければ NULL
                 datetime.utcnow()
             ))
             conn.commit()
