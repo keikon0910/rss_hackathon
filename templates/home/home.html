@@ -44,11 +44,31 @@
 </header>
 
   <main class="max-w-5xl mx-auto px-4">
-    <div id="map" class="rounded-xl shadow"></div>
-    <p class="text-xs text-gray-500 mt-2">
-      ランドマークをクリック → 「この場所で投稿」から投稿ページへ
-    </p>
-  </main>
+  <!-- 地図 -->
+  <div id="map" class="rounded-xl shadow mb-6" style="height:70vh;"></div>
+
+  <!-- 地図下に横幅いっぱいのパネル -->
+  <aside id="landmark-panel"
+         class="w-full rounded-xl border border-gray-200 bg-white p-6 shadow hidden">
+    <h2 id="lmName" class="text-xl font-bold mb-4">ランドマーク名</h2>
+    <div class="flex flex-col sm:flex-row gap-3">
+      <a id="postLink"
+         href="#"
+         class="flex-1 text-center bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700">
+        この場所に投稿する
+      </a>
+      <a id="readLink"
+         href="#"
+         class="flex-1 text-center border py-3 rounded-lg hover:bg-gray-50">
+        この場所の投稿を見る
+      </a>
+    </div>
+  </aside>
+
+  <p class="text-xs text-gray-500 mt-3">
+    ランドマークをクリックすると下のパネルに表示されます
+  </p>
+</main>
 
   <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 </body>
