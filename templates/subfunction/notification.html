@@ -20,7 +20,6 @@
   <!-- Header -->
   <header class="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-black/10">
     <div class="max-w-lg mx-auto px-3 py-3 flex items-center gap-3">
-      <!-- back -->
       <button onclick="history.back()" class="p-2 rounded-full hover:bg-black/5" aria-label="戻る">
         <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path d="M15.75 19.5 8.25 12l7.5-7.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -28,145 +27,44 @@
       </button>
       <h1 class="text-base font-semibold">通知</h1>
     </div>
-
-    <!-- Tabs (All / コメント / DM / いいね) -->
-    <div class="max-w-lg mx-auto px-3 pb-2">
-      <div class="flex items-center gap-4 text-sm">
-        <button data-filter="all" class="notif-tab font-semibold border-b-2 border-black -mb-px py-1">すべて</button>
-        <button data-filter="comment" class="notif-tab text-black/60 hover:text-black py-1">コメント</button>
-        <button data-filter="dm" class="notif-tab text-black/60 hover:text-black py-1">DM</button>
-        <button data-filter="like" class="notif-tab text-black/60 hover:text-black py-1">いいね</button>
-      </div>
-    </div>
   </header>
 
-  <!-- List -->
+  <!-- 通知リスト -->
   <main class="max-w-lg mx-auto px-3 pb-6">
-    <div id="notifList" class="divide-y divide-black/10"></div>
-
-    <!-- 空状態 -->
-    <div id="emptyState" class="hidden mt-8">
-      <div class="rounded-2xl border border-black/10 bg-gray-50 p-6 text-center">
-        <div class="text-lg font-semibold mb-1">過去1か月の通知はありません</div>
-        <div class="text-sm text-black/60">新しいアクティビティがあるとここに表示されます</div>
+  {% for req in follow_requests %}
+    <div class="flex items-start gap-3 px-1 py-3">
+      <div class="w-10 h-10 rounded-full bg-gray-200 grid place-items-center text-gray-500">
+        {% if req.icon %}
+          <img src="{{ req.icon }}" class="w-full h-full object-cover">
+        {% else %}
+          {{ req.display_name[0]|upper }}
+        {% endif %}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm leading-6">
+          <span class="font-semibold">{{ req.display_name }}</span> さんからフォローリクエストが届きました
+        </div>
+        <div class="text-xs text-gray-500">{{ req.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+      </div>
+      <div class="flex gap-2">
+        <form action="{{ url_for('subfunction.accept_follow_request') }}" method="post">
+          <input type="hidden" name="request_id" value="{{ req.request_id }}">
+          <button type="submit" class="px-2 py-1 bg-blue-500 text-white text-xs rounded">承認</button>
+        </form>
+        <form action="{{ url_for('subfunction.reject_follow_request') }}" method="post">
+          <input type="hidden" name="request_id" value="{{ req.request_id }}">
+          <button type="submit" class="px-2 py-1 bg-gray-400 text-white text-xs rounded">拒否</button>
+        </form>
       </div>
     </div>
+  {% else %}
+    <div class="mt-8 text-center text-gray-500">
+      新しい通知はありません
+    </div>
+  {% endfor %}
+
+
   </main>
 
-  <script>
-    // --- ダミーデータ（実装時はAPIから取得して置き換え） ---
-    const now = new Date();
-    const daysAgo = (n) => new Date(now.getFullYear(), now.getMonth(), now.getDate() - n, 10, 0, 0);
-    const sample = [
-      { id: 1, type: 'dm',      user: 'yuto_3426',   time: daysAgo(0) },
-      { id: 2, type: 'comment', user: 'okamoto_151', time: daysAgo(2) },
-      { id: 3, type: 'like',    user: 'kenta_k',     time: daysAgo(5) },
-      { id: 4, type: 'dm',      user: 'milk_0508',   time: daysAgo(8) },
-      { id: 5, type: 'comment', user: 'threads_user',time: daysAgo(15) },
-      { id: 6, type: 'like',    user: 'miho',        time: daysAgo(29) },
-      { id: 7, type: 'like',    user: 'rin',         time: daysAgo(40) }, // ← 1か月超なので除外
-    ];
-
-    // --- 直近1か月以内にフィルタ ---
-    const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
-    const lastMonthData = sample.filter(n => (now - new Date(n.time)) <= ONE_MONTH_MS);
-
-    // 相対時刻
-    function relativeTime(d) {
-      const diff = Math.max(0, (now - d) / 1000); // sec
-      const m = Math.floor(diff / 60);
-      const h = Math.floor(diff / 3600);
-      const dys = Math.floor(diff / 86400);
-      const w = Math.floor(dys / 7);
-      if (diff < 60) return 'たった今';
-      if (m < 60)   return `${m}分前`;
-      if (h < 24)   return `${h}時間前`;
-      if (dys < 7)  return `${dys}日前`;
-      return `${w}週間前`;
-    }
-
-    // アイコン（viewBox 24/線幅1.5/サイズ w-6 h-6 に統一）
-    const Icons = {
-  dm: `
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" 
-         viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path d="M4 6h16v12H4z" stroke-width="1.5" stroke-linejoin="round"/>
-      <path d="M4 6l8 6 8-6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  `,
-  comment: `
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" 
-         viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path d="M5 6h14v9a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V6z" 
-            stroke-width="1.5" stroke-linejoin="round"/>
-    </svg>
-  `,
-  like: `
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6"
-         viewBox="0 0 24 24" fill="none" stroke="currentColor">
-      <path d="M12 21s-6-4-9-8.5C1 9 3.5 5 7 5c2 0 3.5 1.5 5 3.5C13.5 6.5 15 5 17 5c3.5 0 6 4 4 7.5-3 4.5-9 8.5-9 8.5z"
-            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  `
-};
-
-    // レンダリング
-    const listEl = document.getElementById('notifList');
-    const emptyEl = document.getElementById('emptyState');
-    const tabs = document.querySelectorAll('.notif-tab');
-
-    function render(filter = 'all') {
-      const data = lastMonthData.filter(n => filter === 'all' ? true : n.type === filter);
-      listEl.innerHTML = '';
-      if (data.length === 0) {
-        emptyEl.classList.remove('hidden');
-        return;
-      } else {
-        emptyEl.classList.add('hidden');
-      }
-
-      for (const n of data) {
-        const t = new Date(n.time);
-        const item = document.createElement('div');
-        item.className = 'flex items-start gap-3 px-1 py-3';
-        item.innerHTML = `
-          <!-- 左：アバター（頭文字のダミー） -->
-          <div class="w-10 h-10 rounded-full bg-black/5 overflow-hidden grid place-items-center text-black/70">
-            <span class="text-sm font-medium">${n.user[0]?.toUpperCase() || 'U'}</span>
-          </div>
-
-          <!-- 中央：本文 -->
-          <div class="flex-1 min-w-0">
-            <div class="text-sm leading-6">
-              <span class="font-semibold">${n.user}</span>
-              <span class="text-black/80">
-                ${n.type === 'dm' ? 'からDMがありました。'
-                 : n.type === 'comment' ? 'がコメントしました。'
-                 : 'がいいねしました。'}
-              </span>
-            </div>
-            <div class="text-xs text-black/50">${relativeTime(t)}</div>
-          </div>
-
-          <!-- 右：タイプアイコン（丸枠w-10 h-10で統一） -->
-          <div class="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 text-gray-700">
-            ${Icons[n.type]}
-          </div>
-        `;
-        listEl.appendChild(item);
-      }
-    }
-
-    // タブ切り替え
-    tabs.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabs.forEach(b => b.classList.remove('font-semibold', 'border-b-2', 'border-black', '-mb-px'));
-        btn.classList.add('font-semibold', 'border-b-2', 'border-black', '-mb-px');
-        render(btn.dataset.filter);
-      });
-    });
-
-    render('all');
-  </script>
 </body>
 </html>
