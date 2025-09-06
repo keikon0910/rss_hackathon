@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>マイページ | SNS</title>
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-black">
+  <!-- ヘッダー -->
+  <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+      <!-- ロゴ -->
+      <div class="flex items-center gap-2 font-extrabold tracking-tight">
+        <div class="w-9 h-9 rounded-full bg-blue-100 grid place-items-center">SNS</div>
+        <span>Social</span>
+      </div>
+      <nav class="ml-auto">
+        <ul class="flex items-center gap-4 font-semibold">
+          <li><a href="#" class="px-2 py-1 hover:underline">ホーム</a></li>
+          <li><a href="#" class="px-2 py-1 hover:underline">投稿</a></li>
+          <li><a href="#" class="px-2 py-1 hover:underline">マイページ</a></li>
+          <!-- ハンバーガーメニューアイコン（プロフィール編集リンクに置換） -->
+          <li>
+            <a href="profile_settings.html" class="w-9 h-9 rounded-full border border-gray-300 grid place-items-center hover:bg-gray-50">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6.5" x2="21" y2="6.5" /><line x1="3" y1="12"  x2="21" y2="12" /><line x1="3" y1="17.5" x2="21" y2="17.5" /></svg>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- プロフィール -->
+  <section class="max-w-5xl mx-auto px-4 py-5 grid grid-cols-[88px_1fr_auto] gap-x-4 gap-y-3">
+    <!-- アイコン -->
+    <div id="avatar" aria-label="アイコン" class="w-22 h-22 rounded-full border border-gray-200 bg-gray-100 grid place-items-center text-sm font-semibold text-gray-500">ICON</div>
+
+    <!-- 名前（ユーザー名のみ。@ハンドルは非表示） -->
+    <div class="flex items-center">
+      <h1 id="displayName" class="text-xl font-bold leading-tight"></h1>
+    </div>
+
+    <!-- 右側アクション（DM/通知はダミー）-->
+    <div class="flex items-start gap-2">
+      <button title="DM" aria-label="DM" class="w-9 h-9 rounded-full border border-gray-200 grid place-items-center">✉️</button>
+      <button title="通知" aria-label="通知" class="w-9 h-9 rounded-full border border-gray-200 grid place-items-center">🔔</button>
+    </div>
+
+    <!-- ステータス（テンプレ：空） -->
+    <div class="col-start-2 col-end-4 flex gap-6">
+      <div class="grid">
+        <strong id="postCount" class="text-lg font-semibold"></strong>
+        <span class="text-xs text-gray-500">投稿</span>
+      </div>
+      <div class="grid">
+        <strong id="followers" class="text-lg font-semibold"></strong>
+        <span class="text-xs text-gray-500">フォロワー</span>
+      </div>
+      <div class="grid">
+        <strong id="following" class="text-lg font-semibold"></strong>
+        <span class="text-xs text-gray-500">フォロー中</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- タブ -->
+  <nav class="max-w-5xl mx-auto px-4 border-b border-gray-200" role="tablist">
+    <div class="flex gap-6">
+      <button id="tab-posts" role="tab" aria-selected="true" aria-controls="panel-posts" class="-mb-px border-b-2 border-black px-1 py-3 font-bold">投稿</button>
+      <button id="tab-map" role="tab" aria-selected="false" aria-controls="panel-map" class="-mb-px border-b-2 border-transparent hover:border-gray-300 px-1 py-3 font-bold text-gray-500">地図</button>
+    </div>
+  </nav>
+
+  <!-- 投稿タブ -->
+  <section id="panel-posts" role="tabpanel" aria-labelledby="tab-posts" class="max-w-5xl mx-auto px-4 py-4">
+    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+      <strong class="block">過去の投稿</strong>
+      <!-- グリッド（テンプレは空。実データで埋める） -->
+      <div id="postGrid" class="mt-3 grid grid-cols-3 gap-1"></div>
+      <!-- 空状態（表示したくない場合はJSで削除可） -->
+      <p id="emptyHint" class="mt-3 text-sm text-gray-500">（まだ投稿がありません）</p>
+    </div>
+  </section>
+
+  <!-- 地図タブ（プレースホルダ） -->
+  <section id="panel-map" role="tabpanel" aria-labelledby="tab-map" class="max-w-5xl mx-auto px-4 py-4 hidden">
+    <div class="rounded-2xl border-2 border-dashed border-gray-300 bg-white h-56 grid place-items-center text-gray-500">
+      将来的に「投稿位置を地図で可視化」予定（プレースホルダ）
+    </div>
+  </section>
+
+  <script>
+    // ======== テンプレ用ダミー（空の状態） ========
+    const profile = {
+      displayName: "", // ユーザー名のみ。空のまま（テンプレ）
+      avatarUrl: "",
+      followers: "", // 空
+      following: "", // 空
+      posts: []       // 空
+    };
+
+    const $ = (s) => document.querySelector(s);
+
+    // 名前・アイコン・統計を空で表示（テンプレ）
+    $('#displayName').textContent = profile.displayName;
+    if (profile.avatarUrl) {
+      const img = new Image();
+      img.src = profile.avatarUrl; img.alt = 'プロフィール画像'; img.loading = 'lazy';
+      $('#avatar').innerHTML = ''; $('#avatar').appendChild(img);
+    }
+    $('#followers').textContent = profile.followers;
+    $('#following').textContent = profile.following;
+    $('#postCount').textContent = profile.posts.length ? String(profile.posts.length) : '';
+
+    const postGrid = $('#postGrid');
+    if (profile.posts.length === 0) {
+      // 何もしない（テンプレは空）
+    } else {
+      $('#emptyHint').remove();
+      profile.posts.forEach(p => {
+        const a = document.createElement('a');
+        a.href = `post.html?id=${p.id}`;
+        a.className = 'relative aspect-square bg-gray-200 overflow-hidden rounded-md border border-gray-200';
+        const img = new Image(); img.src = p.img; img.alt = '投稿画像'; img.loading = 'lazy'; img.className='w-full h-full object-cover';
+        a.appendChild(img);
+        postGrid.appendChild(a);
+      });
+    }
+
+    // タブ切替
+    const setTab = (key) => {
+      const postsBtn = $('#tab-posts');
+      const mapBtn = $('#tab-map');
+      const posts = $('#panel-posts');
+      const map = $('#panel-map');
+      if (key === 'posts') {
+        postsBtn.setAttribute('aria-selected','true'); mapBtn.setAttribute('aria-selected','false');
+        posts.classList.remove('hidden'); map.classList.add('hidden');
+        postsBtn.classList.add('border-b-2','border-black');
+        mapBtn.classList.add('border-b-2'); mapBtn.classList.remove('border-black');
+      } else {
+        postsBtn.setAttribute('aria-selected','false'); mapBtn.setAttribute('aria-selected','true');
+        posts.classList.add('hidden'); map.classList.remove('hidden');
+        mapBtn.classList.add('border-b-2','border-black');
+        postsBtn.classList.add('border-b-2'); postsBtn.classList.remove('border-black');
+      }
+    };
+    $('#tab-posts').addEventListener('click', () => setTab('posts'));
+    $('#tab-map').addEventListener('click', () => setTab('map'));
+
+    // 共有（対応ブラウザではシェア / 非対応はコピー）
+    $('#shareBtn')?.addEventListener('click', async () => {
+      const shareData = { title: 'プロフィール', url: location.href };
+      if (navigator.share) {
+        try { await navigator.share(shareData); } catch (_) {}
+      } else {
+        try { await navigator.clipboard.writeText(shareData.url); alert('URLをコピーしました'); } catch(_) {}
+      }
+    });
+  </script>
+</body>
+</html>
