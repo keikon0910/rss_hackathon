@@ -1,41 +1,6 @@
-<!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>アカウント設定 | SNS</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-
-<style>
-  body {
-    font-family: 'Noto Sans JP', ui-sans-serif, system-ui, -apple-system,
-                 BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
-                 Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
-                 "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  }
-</style>
-</head>
-<body class="bg-white text-black antialiased">
-
-    <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-      <!-- ロゴ -->
-      <div class="flex items-center gap-2 font-extrabold tracking-tight">
-        <div class="w-9 h-9 rounded-full bg-blue-100 grid place-items-center">SNS</div>
-        <span>Social</span>
-      </div>
-      <nav class="ml-auto">
-        <ul class="flex items-center gap-4 font-semibold">
-          <li><a href="#" class="px-2 py-1 hover:underline">ホーム</a></li>
-          <li><a href="#" class="px-2 py-1 hover:underline">投稿</a></li>
-          <li><a href="#" class="px-2 py-1 hover:underline">マイページ</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-
-  <main class="max-w-xl mx-auto px-4 py-8">
+{% extends "base.html" %}
+{% block content %}
+  <main class="max-w-xl mx-auto px-0 py-2">
     <!-- アイコン編集（プレビュー付き） -->
     <div class="flex flex-col items-center mb-8">
       <div class="w-24 h-24 rounded-full border border-black/40 overflow-hidden grid place-items-center bg-white">
@@ -49,7 +14,7 @@
       </label>
     </div>
 
-    <!-- 設定フォーム（右画像に合わせた必須3項目） -->
+    <!-- 設定フォーム -->
     <section class="bg-gray-50 border border-gray-200 rounded-2xl p-6 md:p-8">
       <h1 class="text-xl font-semibold text-center mb-6">アカウント設定</h1>
 
@@ -94,57 +59,48 @@
       </form>
     </section>
   </main>
+{% endblock %}
 
-  <script>
-    // アイコン画像プレビュー
-    (function(){
-      const input = document.getElementById('avatarInput');
-      const img   = document.getElementById('avatarPreview');
-      if (input && img) {
-        input.addEventListener('change', function(e){
-          const file = e.target.files && e.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = (evt) => { img.src = evt.target.result || ''; };
-          reader.readAsDataURL(file);
-        });
-      }
-    })();
+{% block scripts %}
+<script>
+  // アイコン画像プレビュー
+  (function(){
+    const input = document.getElementById('avatarInput');
+    const img   = document.getElementById('avatarPreview');
+    if (input && img) {
+      input.addEventListener('change', function(e){
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => { img.src = evt.target.result || ''; };
+        reader.readAsDataURL(file);
+      });
+    }
+  })();
 
-    // ユーザー情報の取得（/api/user/me のJSONを想定）
-    (function(){
-      const $ = (id) => document.getElementById(id);
-      const usernameEl = $('username');
-      const createdAtEl = $('created_at');
+  // ユーザー情報の取得（/api/user/me のJSONを想定）
+  (async function(){
+    const $ = (id) => document.getElementById(id);
+    const usernameEl = $('username');
+    const createdAtEl = $('created_at');
 
-      const formatJP = (s) => {
-        const d = new Date(s);
-        if (isNaN(d)) return s || '';
-        return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
-      };
+    const formatJP = (s) => {
+      const d = new Date(s);
+      if (isNaN(d)) return s || '';
+      return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+    };
 
-      async function loadUser(){
-        try {
-          const res = await fetch('/api/user/me', { credentials: 'include' });
-          if (!res.ok) throw new Error('Failed to fetch user');
-          const data = await res.json();
-          if (data.username) usernameEl.value = data.username;
-          if (data.created_at) createdAtEl.value = formatJP(data.created_at);
-          // もし data.avatar_url が返るなら初期アイコンに反映
-          const avatar = document.getElementById('avatarPreview');
-          if (data.avatar_url && avatar) avatar.src = data.avatar_url;
-        } catch (e) {
-          console.error('ユーザー情報取得エラー:', e);
-        }
-      }
-      loadUser();
-    })();
-  </script>
-</body>
-</html>
-
-
-
-
-
-
+    try {
+      const res = await fetch('/api/user/me', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch user');
+      const data = await res.json();
+      if (data.username) usernameEl.value = data.username;
+      if (data.created_at) createdAtEl.value = formatJP(data.created_at);
+      const avatar = document.getElementById('avatarPreview');
+      if (data.avatar_url && avatar) avatar.src = data.avatar_url;
+    } catch (e) {
+      console.error('ユーザー情報取得エラー:', e);
+    }
+  })();
+</script>
+{% endblock %}
