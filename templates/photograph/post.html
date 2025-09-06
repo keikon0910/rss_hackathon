@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新規投稿</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+
+    <div class="flex flex-col min-h-screen">
+
+        <header class="bg-white shadow-sm p-4 flex items-center justify-between">
+            <h1 class="text-3xl font-bold text-blue-500">SNS</h1>
+            <nav class="flex space-x-4 text-gray-700 font-semibold">
+                <a href="home.html" class="hover:text-blue-500">ホーム</a>
+                <a href="post.html" class="hover:text-blue-500">投稿</a>
+                <a href="personal.html" class="hover:text-blue-500">マイページ</a>
+            </nav>
+        </header>
+
+        <main class="flex-grow flex flex-col items-center justify-center p-4 space-y-6">
+            <form action="#" method="post" enctype="multipart/form-data" class="w-full max-w-md space-y-6">
+
+                <label for="photo-upload" class="w-full h-48 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-white cursor-pointer hover:bg-gray-100 transition-colors duration-200">
+                    <span class="text-gray-500">写真のアップロード</span>
+                    <input id="photo-upload" type="file" name="photo" class="hidden" accept="image/*">
+                </label>
+
+                <input type="text" name="title" placeholder="写真のタイトルの入力" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+                <button type="submit" class="w-full py-3 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75">
+                    投稿
+                </button>
+            </form>
+        </main>
+
+    </div>
+
+</body>
+</html>
