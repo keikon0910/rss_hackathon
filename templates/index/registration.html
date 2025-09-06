@@ -30,12 +30,12 @@
 
     <!-- ✅ aタグで戻る -->
     <div class="button-area">
-        <a href="{{ url_for('#') }}" class="back-link">← 戻る</a>
+        <a href="{{url_for('index.index')}}" class="back-link">← 戻る</a>
     </div>
 
     <p class="note">
         すでにアカウントをお持ちの方は
-        <a href="{{ url_for('#') }}">こちら</a> からログイン
+        <a href="{{ url_for('index.login') }}">こちら</a> からログイン
     </p>
 
 </div>
