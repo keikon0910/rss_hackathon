@@ -32,14 +32,18 @@ def post():
         title = request.form.get('title')
         photo = request.files.get('photo')
 
-        # 入力チェック
+        # タイトル必須チェック
         if not title:
             flash("タイトルを入力してください", "error")
             return render_template('post.html')
 
         try:
-
-
+            # 画像のBase64変換（画像がない場合はNone）
+            image_base64 = None
+            if photo and photo.filename != '':
+                photo_data = photo.read()
+                if photo_data:
+                    image_base64 = base64.b64encode(photo_data).decode('utf-8')
 
             # DB登録
             conn = get_db_connection()
@@ -50,6 +54,7 @@ def post():
             """, (
                 session['user_id'],
                 title,
+                image_base64,  # 画像がなければNULL
                 datetime.utcnow()
             ))
             conn.commit()

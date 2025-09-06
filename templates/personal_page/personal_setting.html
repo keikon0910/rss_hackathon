@@ -55,14 +55,15 @@
       <h1 class="text-xl font-semibold text-center mb-6">アカウント設定</h1>
 
       <form class="space-y-6" action="#" method="post">
-        <!-- ユーザー名 -->
-        <div>
-          <label for="username" class="block text-sm mb-2">ユーザー名</label>
-          <input id="username" name="username" type="text" placeholder="example_user"
-                 class="w-full border border-black/50 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black" />
-        </div>
+      <!-- ユーザー名 -->
+      <div>
+        <label class="block text-sm mb-2">ユーザー名</label>
+        <p class="w-full border border-black/50 rounded px-3 py-2 bg-white text-black/80">
+          {{ user.display_name }}
+        </p>
+      </div>
 
-        <!-- 公開 / 非公開 -->
+        <!-- 公開 / 非公開（残す） -->
         <fieldset>
           <legend class="block text-sm mb-2">公開 / 非公開</legend>
           <label class="relative inline-flex items-center cursor-pointer select-none">
@@ -75,16 +76,19 @@
 
         <!-- ユーザーのGmail -->
         <div>
-          <label for="email" class="block text-sm mb-2">ユーザーのGmail</label>
-          <input id="email" name="email" type="email" placeholder="you@example.com"
-                 class="w-full border border-black/50 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black" />
+          <label class="block text-sm mb-2">ユーザーのGmail</label>
+          <p class="w-full border border-black/50 rounded px-3 py-2 bg-white text-black/80">
+            {{ user.email }}
+          </p>
         </div>
 
-        <!-- アカウント作成日（表示のみ） -->
+
+        <!-- アカウント作成日 -->
         <div>
           <label class="block text-sm mb-2">アカウント作成日</label>
-          <input id="created_at" type="text" placeholder="YYYY年M月D日" readonly
-                 class="w-full border border-black/50 rounded px-3 py-2 bg-white text-black/80" />
+          <p class="w-full border border-black/50 rounded px-3 py-2 bg-white text-black/80">
+            {% if user.created_at %}{{ user.created_at.strftime('%Y年%-m月%-d日') }}{% endif %}
+          </p>
         </div>
 
         <!-- Actions -->
