@@ -11,38 +11,59 @@
   </style>
 </head>
 <body class="bg-white text-black antialiased">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="mb-4">
+      {% for category, message in messages %}
+        <div class="p-3 rounded-lg text-sm 
+                    {% if category == 'error' %} bg-red-100 text-red-800 
+                    {% elif category == 'success' %} bg-green-100 text-green-800 
+                    {% else %} bg-gray-100 text-gray-800 {% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+
   <div class="min-h-screen flex flex-col">
 
     <!-- ヘッダー -->
-  <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
-  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-    <!-- ロゴ -->
-    <div class="flex items-center gap-2 font-extrabold tracking-tight">
-      <div class="w-9 h-9 rounded-full bg-blue-100 grid place-items-center">SNS</div>
-      <span>Social</span>
-    </div>
-
-      <nav class="ml-auto">
-        <ul class="flex items-center gap-4 font-semibold">
-          <li><a href="{{url_for('home.home')}}" class="px-2 py-1 hover:underline">ホーム</a></li>
-          <li><a href="{{url_for('photograph.post')}}" class="px-2 py-1 hover:underline">投稿</a></li>
-          <li><a href="{{url_for('personal_page.personal_page')}}" class="px-2 py-1 hover:underline">マイページ</a></li>
-        </ul>
-      </nav>
-  </div>
-</header>
+    <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
+      <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+        <div class="flex items-center gap-2 font-extrabold tracking-tight">
+          <div class="w-9 h-9 rounded-full bg-blue-100 grid place-items-center">SNS</div>
+          <span>Social</span>
+        </div>
+        <nav class="ml-auto">
+          <ul class="flex items-center gap-4 font-semibold">
+            <li><a href="{{url_for('home.home')}}" class="px-2 py-1 hover:underline">ホーム</a></li>
+            <li><a href="{{url_for('photograph.post')}}" class="px-2 py-1 hover:underline">投稿</a></li>
+            <li><a href="{{url_for('personal_page.personal_page')}}" class="px-2 py-1 hover:underline">マイページ</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
 
     <!-- Main -->
     <main class="flex-1">
       <div class="max-w-2xl mx-auto px-4 py-10">
-        <form action="#" method="post" enctype="multipart/form-data" class="space-y-5">
+        <form action="{{ url_for('photograph.post') }}" method="post" enctype="multipart/form-data" class="space-y-5">
           <!-- アップロード枠 -->
           <label for="photo-upload" class="block">
             <div class="h-44 rounded-2xl border-2 border-dashed border-gray-300 grid place-items-center text-black/50 hover:bg-black/5 transition">
               <span>写真のアップロード</span>
             </div>
-            <input id="photo-upload" type="file" name="photo" class="hidden" accept="image/*">
+            <input id="photo-upload" type="file" name="photo" class="hidden" accept="image/*" onchange="previewImage(event)">
           </label>
+
+          <!-- プレビュー表示 -->
+          <div id="preview-container" class="hidden">
+            <p class="text-sm text-gray-500">アップロードした画像:</p>
+            <img id="preview" class="max-h-60 rounded-lg mt-2">
+          </div>
 
           <!-- タイトル -->
           <input type="text" name="title" placeholder="写真のタイトルの入力"
@@ -58,5 +79,21 @@
     </main>
 
   </div>
+
+  <script>
+    function previewImage(event) {
+      const file = event.target.files[0];
+      const previewContainer = document.getElementById('preview-container');
+      const preview = document.getElementById('preview');
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          previewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  </script>
 </body>
 </html>
