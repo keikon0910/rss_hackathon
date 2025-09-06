@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>ランドマーク {{ landmark_id }} の投稿</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-50 p-4">
+
+<h1 class="text-2xl font-bold mb-4">ランドマーク {{ landmark_id }} の投稿一覧</h1>
+
+{% if posts %}
+  {% for post in posts %}
+    <div class="border rounded-lg p-4 mb-3 bg-white shadow">
+      <h2 class="font-semibold">{{ post[1] }}</h2>
+      <p class="text-gray-700 mt-1">{{ post[2] }}</p>
+      <span class="text-xs text-gray-400">{{ post[3] }}</span>
+    </div>
+  {% endfor %}
+{% else %}
+  <p class="text-gray-500">このランドマークにはまだ投稿がありません。</p>
+{% endif %}
+
+<a href="{{ url_for('home.home') }}" class="inline-block mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+  ホームに戻る
+</a>
+
+</body>
+</html>
