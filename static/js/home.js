@@ -193,6 +193,7 @@ if (navigator.geolocation) {
   if (msgEl) msgEl.textContent = "この端末は位置情報に未対応です";
 }
 
+
 // ====== landmarkLayer クリック時の情報表示 ======
 function setupLandmarkClickEvents() {
   if (!landmarkLayer) {
@@ -223,11 +224,13 @@ function setupLandmarkClickEvents() {
         console.log("<p> に表示:", infoP.textContent);
       }
 
-      // 投稿ボタンのリンクを更新
+      // 投稿ボタンは非表示または無効化（表示させない）
       const postLink = document.getElementById("postLink");
       if (postLink) {
-        postLink.href = `/photograph/post?landmark_id=${f.id}`;
-        console.log("投稿リンクを更新:", postLink.href);
+        postLink.style.display = "none"; // 完全に非表示にする
+        // もし表示したいけど遷移させたくない場合:
+        // postLink.href = "#";
+        // postLink.onclick = (e) => e.preventDefault();
       }
 
       // 下のパネルを表示
