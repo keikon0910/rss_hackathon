@@ -1,45 +1,90 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>新規登録</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>新規登録 | SNS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:'Noto Sans JP',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif}
+  </style>
 </head>
-<body>
+<body class="bg-white text-black antialiased">
 
-<div class="container">
-    <h1>新規登録</h1>
+  <!-- 全体ラッパー -->
+  <div class="min-h-screen grid lg:grid-cols-2">
 
-<form method="post" action="{{ url_for('index.registration') }}">
-    <label for="display_name">ユーザー名</label>
-    <input type="text" id="display_name" name="display_name" required>
+    <!-- 左：ビジュアル -->
+    <aside class="relative overflow-hidden hidden lg:block">
+      <div class="absolute inset-0 bg-gradient-to-b from-blue-200 to-blue-400"></div>
 
-    <label for="email">メールアドレス</label>
-    <input type="email" id="email" name="email" required>
+      <div class="relative h-full p-10 flex flex-col">
+        <!-- ロゴ置き場 -->
+        <div class="mt-6">
+          <div class="w-40 h-40 md:w-64 md:h-64 rounded-[2rem] bg-white/70 border border-black/10 grid place-items-center shadow-sm">
+            <span class="text-gray-700 text-xl md:text-2xl">ロゴ</span>
+          </div>
+        </div>
 
-    <label for="password">パスワード</label>
-    <input type="password" id="password" name="password" required>
+      <!-- 左上ヘッダ風 -->
+      <div class="absolute top-6 left-6 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-white/70 grid place-items-center text-xs font-semibold shadow-sm">SNS</div>
+        <span class="text-white font-semibold drop-shadow">Social</span>
+      </div>
+    </aside>
 
-    <label for="password_confirm">パスワード確認</label>
-    <input type="password" id="password_confirm" name="password_confirm" required>
+    <!-- 右：新規登録フォーム -->
+    <main class="flex items-center justify-center px-6 py-10">
+      <div class="w-full max-w-md">
+        <h1 class="text-2xl font-semibold tracking-tight text-center mb-6">新規登録</h1>
 
-    <div class="button-area">
-        <button type="submit" class="register-button">登録する</button>
-    </div>
-</form>
+        <form method="post" action="{{ url_for('index.registration') }}" class="space-y-5">
+          <div>
+            <label for="display_name" class="block text-sm mb-1">ユーザー名</label>
+            <input id="display_name" name="display_name" type="text" required
+                   class="w-full rounded-lg border border-black/20 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                   placeholder="ユーザー名を入力" />
+          </div>
 
-    
+          <div>
+            <label for="email" class="block text-sm mb-1">メールアドレス</label>
+            <input id="email" name="email" type="email" required
+                   class="w-full rounded-lg border border-black/20 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                   placeholder="you@example.com" />
+          </div>
 
-    <!-- ✅ aタグで戻る -->
-    <div class="button-area">
-        <a href="{{url_for('index.index')}}" class="back-link">← 戻る</a>
-    </div>
+          <div>
+            <label for="password" class="block text-sm mb-1">パスワード</label>
+            <input id="password" name="password" type="password" required
+                   class="w-full rounded-lg border border-black/20 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                   placeholder="••••••••" />
+          </div>
 
-    <p class="note">
-        すでにアカウントをお持ちの方は
-        <a href="{{ url_for('index.login') }}">こちら</a> からログイン
-    </p>
+          <div>
+            <label for="password_confirm" class="block text-sm mb-1">パスワード確認</label>
+            <input id="password_confirm" name="password_confirm" type="password" required
+                   class="w-full rounded-lg border border-black/20 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                   placeholder="もう一度入力してください" />
+          </div>
 
-</div>
+          <button type="submit"
+                  class="w-full rounded-xl border border-black bg-black text-white font-semibold py-3 hover:opacity-85 transition">
+            完了
+          </button>
+        </form>
 
+        <!-- 下部リンク -->
+        <div class="mt-6 space-y-2 text-sm">
+          <div>すでにアカウントをお持ちの方は
+            <a href="{{ url_for('index.login') }}" class="text-black underline hover:no-underline">こちら</a> からログイン
+          </div>
+          <div>
+            <a href="{{ url_for('index.index') }}" class="inline-flex items-center gap-1 text-gray-600 underline hover:no-underline">← 戻る</a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 </body>
 </html>
