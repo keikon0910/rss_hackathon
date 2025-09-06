@@ -73,7 +73,6 @@ DB_PARAMS = {
 def get_db_connection():
     return psycopg2.connect(**DB_PARAMS)
 
-
 @personal_page_bp.route('/personal_page')
 def personal_page():
     if 'user_id' not in session:
@@ -82,6 +81,8 @@ def personal_page():
 
     user_data = {}
     posts = []
+    post_count = 0  # ← 投稿数用の変数
+
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -112,13 +113,18 @@ def personal_page():
             for r in cur.fetchall()
         ]
 
+        # 🔹 投稿数取得
+        cur.execute("SELECT COUNT(*) FROM posts WHERE user_id=%s", (session['user_id'],))
+        post_count = cur.fetchone()[0]
 
         cur.close()
         conn.close()
+
     except Exception as e:
         flash(f"データ取得エラー: {e}", "error")
 
-    return render_template('personal_page.html', user=user_data, posts=posts)
+    return render_template('personal_page.html', user=user_data, posts=posts, post_count=post_count)
+
 
 @personal_page_bp.route('/personal_setting')
 def personal_setting():
