@@ -23,9 +23,10 @@
       <div class="relative h-full p-10 flex flex-col">
         <!-- ロゴ置き場のカード -->
         <div class="mt-6">
-          <div class="w-40 h-40 md:w-64 md:h-64 rounded-[2rem] bg-white/70 border border-black/10 grid place-items-center shadow-sm">
-            <span class="text-gray-700 text-xl md:text-2xl">ロゴ</span>
-          </div>
+        <div class="w-40 h-40 md:w-64 md:h-64 rounded-[2rem] bg-white/70 border border-black/10 grid place-items-center shadow-sm overflow-hidden">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ロゴ" class="w-full h-full object-contain">
+        </div>
+</div>
         </div>
 
       <!-- 左上のラベル -->
