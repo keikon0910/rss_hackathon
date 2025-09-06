@@ -46,8 +46,9 @@
 
     <!-- 名前（ユーザー名のみ。@ハンドルは非表示） -->
     <div class="flex items-center">
-      <h1 id="displayName" class="text-xl font-bold leading-tight"></h1>
+      <h1 id="displayName" class="text-xl font-bold leading-tight text-black">{{ user.display_name }}</h1>
     </div>
+
 
     <!-- 右側アクション（DM/通知はダミー）-->
     <div class="flex items-start gap-2">
@@ -120,16 +121,7 @@
   </section>
 
   <script>
-    // ======== テンプレ用ダミー（空の状態） ========
-    const profile = {
-      displayName: "", // ユーザー名のみ。空のまま（テンプレ）
-      avatarUrl: "",
-      followers: "", // 空
-      following: "", // 空
-      posts: []       // 空
-    };
 
-    const $ = (s) => document.querySelector(s);
 
     // 名前・アイコン・統計を空で表示（テンプレ）
     $('#displayName').textContent = profile.displayName;

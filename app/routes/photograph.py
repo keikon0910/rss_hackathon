@@ -22,6 +22,36 @@ DB_PARAMS = {
 def get_db_connection():
     return psycopg2.connect(**DB_PARAMS)
 
+
+@photograph_bp.route('/personal_page')
+def personal_page():
+    if 'user_id' not in session:
+        flash("ログインが必要です", "error")
+        return redirect(url_for('index.login'))
+
+    user_data = {}
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT display_name, icon
+            FROM users
+            WHERE id = %s
+        """, (session['user_id'],))
+        row = cur.fetchone()
+        if row:
+            user_data = {
+                'display_name': row[0],
+                'icon': row[1] if row[1] else ''
+            }
+        cur.close()
+        conn.close()
+    except Exception as e:
+        flash(f"ユーザー情報の取得に失敗しました: {e}", "error")
+
+    return render_template('personal_page.html', user=user_data)
+
+
 @photograph_bp.route('/post', methods=['GET', 'POST'])
 def post():
     if 'user_id' not in session:
