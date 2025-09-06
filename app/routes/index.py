@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template
 from flask import request, redirect, url_for, flash
+from werkzeug.security import generate_password_hash
 
 index_bp = Blueprint(
     'index',
