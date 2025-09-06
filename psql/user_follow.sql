@@ -17,3 +17,11 @@ CREATE TABLE follow_requests (
     UNIQUE(sender_uid, receiver_uid), -- 重複禁止
     CHECK (sender_uid <> receiver_uid) -- 自分自身に送信禁止
 );
+
+--これはリレーションテーブルだよ。けーすけ説明よろしく
+CREATE TABLE user_follow (
+    follower_uid INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    followee_uid INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (follower_uid, followee_uid)
+);

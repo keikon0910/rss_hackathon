@@ -32,21 +32,22 @@
   <!-- 通知リスト -->
   <main class="max-w-lg mx-auto px-3 pb-6">
   {% for req in follow_requests %}
-    <div class="flex items-start gap-3 px-1 py-3">
-      <div class="w-10 h-10 rounded-full bg-gray-200 grid place-items-center text-gray-500">
-        {% if req.icon %}
-          <img src="{{ req.icon }}" class="w-full h-full object-cover">
-        {% else %}
-          {{ req.display_name[0]|upper }}
-        {% endif %}
+  <div class="flex items-start gap-3 px-1 py-3">
+    <div class="w-10 h-10 rounded-full bg-gray-200 grid place-items-center text-gray-500">
+      {% if req.icon %}
+        <img src="{{ req.icon }}" class="w-full h-full object-cover">
+      {% else %}
+        {{ req.display_name[0]|upper }}
+      {% endif %}
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="text-sm leading-6">
+        <span class="font-semibold">{{ req.display_name }}</span> さんからフォローリクエストが届きました
       </div>
-      <div class="flex-1 min-w-0">
-        <div class="text-sm leading-6">
-          <span class="font-semibold">{{ req.display_name }}</span> さんからフォローリクエストが届きました
-        </div>
-        <div class="text-xs text-gray-500">{{ req.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
-      </div>
-      <div class="flex gap-2">
+      <div class="text-xs text-gray-500">{{ req.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+    </div>
+    <div class="flex gap-2">
+      {% if req.status == 'pending' %}
         <form action="{{ url_for('subfunction.accept_follow_request') }}" method="post">
           <input type="hidden" name="request_id" value="{{ req.request_id }}">
           <button type="submit" class="px-2 py-1 bg-blue-500 text-white text-xs rounded">承認</button>
@@ -55,13 +56,18 @@
           <input type="hidden" name="request_id" value="{{ req.request_id }}">
           <button type="submit" class="px-2 py-1 bg-gray-400 text-white text-xs rounded">拒否</button>
         </form>
-      </div>
+      {% elif req.status == 'accepted' %}
+        <span class="px-2 py-1 bg-green-400 text-white text-xs rounded">承認済み</span>
+      {% else %}
+        <span class="px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded">拒否済み</span>
+      {% endif %}
     </div>
-  {% else %}
-    <div class="mt-8 text-center text-gray-500">
-      新しい通知はありません
-    </div>
-  {% endfor %}
+  </div>
+{% else %}
+  <div class="mt-8 text-center text-gray-500">
+    新しい通知はありません
+  </div>
+{% endfor %}
 
 
   </main>

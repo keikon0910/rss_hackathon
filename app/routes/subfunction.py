@@ -36,6 +36,7 @@ def DM_personal():
     return render_template('DM_personal.html')
 
 # 通知画面
+# 通知画面取得
 @subfunction_bp.route('/notification')
 def notification():
     if 'user_id' not in session:
@@ -49,18 +50,17 @@ def notification():
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # users テーブルに JOIN して通知を取得
+        # すべてのフォローリクエストを取得（pending と accepted 両方）
         cur.execute("""
             SELECT fr.request_id, fr.sender_uid, fr.receiver_uid, fr.status, fr.created_at,
                    u.display_name, u.icon
             FROM follow_requests fr
             JOIN users u ON fr.sender_uid = u.id
-            WHERE fr.receiver_uid = %s AND fr.status = 'pending'
+            WHERE fr.receiver_uid = %s
             ORDER BY fr.created_at DESC
         """, (current_user_id,))
         rows = cur.fetchall()
 
-        # リストを辞書形式に変換してテンプレートに渡す
         for r in rows:
             follow_requests.append({
                 'request_id': r[0],
@@ -88,38 +88,84 @@ def accept_follow_request():
         return redirect(url_for('index.login'))
 
     request_id = request.form.get('request_id')
+    print("[DEBUG] request_id from form:", request_id)
+
+    if not request_id:
+        flash("リクエストIDがありません", "error")
+        return redirect(url_for('subfunction.notification'))
+
+    try:
+        request_id = int(request_id)
+    except ValueError:
+        flash("リクエストIDが不正です", "error")
+        return redirect(url_for('subfunction.notification'))
+
+    current_user_id = session['user_id']
+    conn = None
+    cur = None
 
     try:
         conn = get_db_connection()
         cur = conn.cursor()
+        print("[DEBUG] DB接続成功")
 
-        # フォローリクエスト情報を取得
-        cur.execute("SELECT sender_uid, receiver_uid FROM follow_requests WHERE request_id = %s", (request_id,))
+        # 1. フォローリクエストを取得
+        cur.execute("SELECT sender_uid, receiver_uid, status FROM follow_requests WHERE request_id=%s", (request_id,))
         row = cur.fetchone()
-        if row:
-            sender_uid, receiver_uid = row
+        print("[DEBUG] DB row fetched:", row)
 
-            # 相互フォローに追加
+        if not row:
+            flash("リクエストが存在しません", "error")
+            return redirect(url_for('subfunction.notification'))
+
+        sender_uid, receiver_uid, status = row
+        print(f"[DEBUG] sender_uid={sender_uid}, receiver_uid={receiver_uid}, status={status}")
+
+        if status == 'accepted':
+            flash("すでに承認済みです", "info")
+            return redirect(url_for('subfunction.notification'))
+
+        # 2. user_follow に相互フォローを追加
+        try:
             cur.execute("""
                 INSERT INTO user_follow (follower_uid, followee_uid)
                 VALUES (%s, %s), (%s, %s)
                 ON CONFLICT (follower_uid, followee_uid) DO NOTHING
             """, (sender_uid, receiver_uid, receiver_uid, sender_uid))
+            print("[DEBUG] user_followへのINSERT成功")
+        except Exception as e_insert:
+            print("[ERROR] user_follow INSERT失敗:", e_insert)
+            raise
 
-            # ステータス更新
-            cur.execute("UPDATE follow_requests SET status='accepted' WHERE request_id = %s", (request_id,))
-            conn.commit()
-            flash("フォローを承認しました", "success")
-        else:
-            flash("リクエストが存在しません", "error")
+        # 3. follow_requests のステータス更新
+        try:
+            cur.execute("UPDATE follow_requests SET status='accepted' WHERE request_id=%s", (request_id,))
+            print("[DEBUG] follow_requests UPDATE成功, updated rows:", cur.rowcount)
+        except Exception as e_update:
+            print("[ERROR] follow_requests UPDATE失敗:", e_update)
+            raise
 
-        cur.close()
-        conn.close()
+        # 4. コミット
+        conn.commit()
+        print("[DEBUG] コミット成功")
+        flash("フォローを承認しました", "success")
+
     except Exception as e:
-        conn.rollback()
+        print("[ERROR] 承認処理で例外発生:", e)
+        if conn:
+            conn.rollback()
+            print("[DEBUG] ロールバック実行")
         flash(f"承認エラー: {e}", "error")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+            print("[DEBUG] DB接続クローズ")
 
     return redirect(url_for('subfunction.notification'))
+
+
 
 # 拒否
 @subfunction_bp.route('/reject_follow_request', methods=['POST'])
