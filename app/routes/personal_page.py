@@ -158,29 +158,68 @@ def personal_setting():
 
     return render_template('personal_setting.html', user=user_data)
 
+
 @personal_page_bp.route('/search_users', methods=['GET', 'POST'])
 def search_users():
     users = []
-    query = ""
+    query = request.args.get('username', '').strip()  # 🔹検索用はGETパラメータで管理
+    current_user_id = session.get('user_id')
 
-    if request.method == 'POST':
-        query = request.form.get('username', '').strip()
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
 
+        # 🔹フォローボタン押下時（POST）
+        if request.method == 'POST':
+            follow_user_id = request.form.get('follow_user_id')
+
+            if follow_user_id and current_user_id:
+                try:
+                    cur.execute("""
+                        INSERT INTO follow_requests (sender_uid, receiver_uid)
+                        VALUES (%s, %s)
+                        ON CONFLICT (sender_uid, receiver_uid) DO NOTHING
+                        RETURNING request_id
+                    """, (current_user_id, follow_user_id))
+                    inserted = cur.fetchone()
+                    conn.commit()
+
+                    if inserted:
+                        flash("フォローリクエストを送信しました", "success")
+                    else:
+                        flash("すでにリクエスト済みです", "info")
+
+                except Exception as e:
+                    conn.rollback()
+                    flash(f"フォローリクエスト送信エラー: {e}", "error")
+
+        # 🔹ユーザー検索
         if query:
-            try:
-                conn = get_db_connection()
-                cur = conn.cursor()
-                cur.execute("""
-                    SELECT id, display_name, icon
-                    FROM users
-                    WHERE display_name ILIKE %s
-                    ORDER BY display_name
-                """, (f"%{query}%",))
-                rows = cur.fetchall()
-                users = [{"id": r[0], "name": r[1], "icon": r[2] or ""} for r in rows]
-                cur.close()
-                conn.close()
-            except Exception as e:
-                flash(f"検索エラー: {e}", "error")
+            cur.execute("""
+                SELECT u.id, u.display_name, u.icon,
+                       CASE 
+                           WHEN fr.status = 'pending' THEN TRUE
+                           ELSE FALSE
+                       END AS is_pending
+                FROM users u
+                LEFT JOIN follow_requests fr
+                    ON fr.sender_uid = %s AND fr.receiver_uid = u.id
+                WHERE u.display_name ILIKE %s
+                ORDER BY u.display_name
+            """, (current_user_id, f"%{query}%"))
+            rows = cur.fetchall()
+
+            users = [{
+                "id": r[0],
+                "name": r[1],
+                "icon": r[2] or "",
+                "is_pending": r[3]
+            } for r in rows]
+
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        flash(f"検索エラー: {e}", "error")
 
     return render_template('search_users.html', users=users, query=query)
