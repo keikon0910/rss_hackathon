@@ -2,7 +2,11 @@ import os
 from flask import Flask
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(
+        __name__,
+        static_folder="../static",
+        static_url_path="/static"
+    )
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
     from .routes.index import index_bp
