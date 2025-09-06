@@ -82,6 +82,9 @@ async function loadLandmarks() {
     const res = await fetch("/api/landmarks");
     const geojson = await res.json();
 
+    // ★ここでブラウザのコンソールに表示
+    console.log("取得したランドマークデータ:", geojson);
+
     if (!geojson || geojson.type !== "FeatureCollection") {
       console.error("Invalid /api/landmarks payload:", geojson);
       return;
@@ -98,7 +101,6 @@ async function loadLandmarks() {
     const b = landmarkLayer.getBounds();
     if (b.isValid()) map.fitBounds(b.pad(0.2));
 
-    // 再判定
     if (lastUserPos) {
       const { lat, lon, acc } = lastUserPos;
       setCTA(checkInsideAny(lon, lat, acc));
@@ -107,6 +109,7 @@ async function loadLandmarks() {
     console.error("Failed to load landmarks:", e);
   }
 }
+
 loadLandmarks();
 
 // ====== Geolocation ======
