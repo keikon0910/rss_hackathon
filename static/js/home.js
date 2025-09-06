@@ -61,20 +61,28 @@ function checkInsideAny(lon, lat, accuracyMeters = 30) {
   const pt = turf.point([lon, lat]);
   const bufferKm = Math.max(accuracyMeters, 30) / 1000;
 
+  console.log("ユーザー位置:", [lon, lat]); // ← ここで現在位置を出力
+
   const hits = [];
   for (const f of landmarksGeoJSON.features) {
     let inside = false;
     try {
-      inside = turf.booleanPointInPolygon(pt, f);
+      inside = turf.booleanPointInPolygon(pt, f); // ポリゴン内判定
       if (!inside) {
         const buffered = turf.buffer(f, bufferKm, { units: "kilometers" });
-        inside = turf.booleanPointInPolygon(pt, buffered);
+        inside = turf.booleanPointInPolygon(pt, buffered); // 精度分の余裕も判定
       }
     } catch (_) {}
+
+    console.log(`ランドマーク "${f.properties?.name}" 内判定:`, inside); // ← 判定結果を出力
+
     if (inside) hits.push(f);
   }
-  return hits;
+
+  console.log("判定結果（ヒットしたランドマーク）:", hits); // ← 最終結果を出力
+  return hits; // ランドマーク内なら配列に入れる
 }
+
 
 // ====== ランドマークを読み込んで描画 ======
 async function loadLandmarks() {
