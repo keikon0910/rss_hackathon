@@ -22,13 +22,13 @@
       <span>Social</span>
     </div>
 
-    <nav class="ml-auto">
-      <ul class="flex items-center gap-4 font-semibold">
-        <li><a href="#" class="px-2 py-1 hover:underline">ホーム</a></li>
-        <li><a href="#" class="px-2 py-1 hover:underline">投稿</a></li>
-        <li><a href="#" class="px-2 py-1 hover:underline">マイページ</a></li>
-      </ul>
-    </nav>
+      <nav class="ml-auto">
+        <ul class="flex items-center gap-4 font-semibold">
+          <li><a href="{{url_for('home.home')}}" class="px-2 py-1 hover:underline">ホーム</a></li>
+          <li><a href="{{url_for('photograph.post')}}" class="px-2 py-1 hover:underline">投稿</a></li>
+          <li><a href="{{url_for('personal_page.personal_page')}}" class="px-2 py-1 hover:underline">マイページ</a></li>
+        </ul>
+      </nav>
   </div>
 </header>
 
