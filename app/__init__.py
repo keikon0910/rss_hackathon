@@ -15,6 +15,8 @@ def create_app():
     from .routes.personal_page import personal_page_bp
     from .routes.subfunction import subfunction_bp
     from .routes.others import others_bp
+    from .routes.landmarks import landmark_bp
+
 
     app.register_blueprint(index_bp)
     app.register_blueprint(home_bp)
@@ -22,6 +24,7 @@ def create_app():
     app.register_blueprint(personal_page_bp)
     app.register_blueprint(subfunction_bp)
     app.register_blueprint(others_bp)
+    app.register_blueprint(landmark_bp)
 
     return app
 
