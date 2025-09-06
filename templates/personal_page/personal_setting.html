@@ -97,13 +97,15 @@
   </main>
 
   <!-- ▼ ページ最後：ログアウトボタン -->
-  <footer class="max-w-xl mx-auto px-4 pb-10">
-    <hr class="border-black/10 my-8">
-    <button id="logoutBtn"
-      class="w-full py-2.5 border border-black rounded-lg hover:bg-black hover:text-white transition">
-      ログアウト
-    </button>
-  </footer>
+
+<footer class="max-w-xl mx-auto px-4 pb-10">
+  <hr class="border-black/10 my-8">
+  <a href="{{ url_for('index.logout') }}"
+     class="w-full block text-center py-2.5 border border-black rounded-lg hover:bg-black hover:text-white transition">
+    ログアウト
+  </a>
+</footer>
+
 
   <script>
     // アイコン画像プレビュー
@@ -166,6 +168,10 @@
         }
       });
     })();
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+    window.location.href = '/logout';
+  });
   </script>
 </body>
 </html>
