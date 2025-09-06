@@ -23,8 +23,10 @@
   <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
     <!-- ロゴ -->
     <div class="flex items-center gap-2 font-extrabold tracking-tight">
-      <div class="w-9 h-9 rounded-full bg-blue-100 grid place-items-center">SNS</div>
-      <span>Social</span>
+      <img src="{{ url_for('static', filename='images/logo.png') }}"
+       alt="BeLocal ロゴ"
+       class="w-10 h-10 rounded-full object-cover">
+        <span class="text-black font-semibold drop-shadow">BeLocal</span>
     </div>
 
       <nav class="ml-auto">

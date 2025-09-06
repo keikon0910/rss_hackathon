@@ -22,16 +22,20 @@
       <div class="relative h-full p-10 flex flex-col">
         <!-- ロゴ置き場 -->
         <div class="mt-6">
-          <div class="w-40 h-40 md:w-64 md:h-64 rounded-[2rem] bg-white/70 border border-black/10 grid place-items-center shadow-sm">
-            <span class="text-gray-700 text-xl md:text-2xl">ロゴ</span>
-          </div>
+          <div class="w-40 h-40 md:w-64 md:h-64 rounded-[2rem] bg-white/70 border border-black/10 grid place-items-center shadow-sm overflow-hidden">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ロゴ" class="w-full h-full object-contain">
+        </div>
         </div>
 
       <!-- 左上ヘッダ風 -->
       <div class="absolute top-6 left-6 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-white/70 grid place-items-center text-xs font-semibold shadow-sm">SNS</div>
-        <span class="text-white font-semibold drop-shadow">Social</span>
-      </div>
+  <!-- 背景をつけずにロゴを丸く表示 -->
+  <img src="{{ url_for('static', filename='images/logo.png') }}"
+       alt="BeLocal ロゴ"
+       class="w-10 h-10 rounded-full object-cover">
+
+  <span class="text-white font-semibold drop-shadow">BeLocal</span>
+</div>
     </aside>
 
     <!-- 右：新規登録フォーム -->

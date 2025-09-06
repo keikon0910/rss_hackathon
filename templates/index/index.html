@@ -48,7 +48,9 @@
   <header class="fixed inset-x-0 top-0 z-20">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center">
       <div id="brandHeader" class="flex items-center gap-2 opacity-0 transition-opacity duration-700">
-        <div class="w-8 h-8 rounded-full bg-white/80 grid place-items-center text-[10px] font-semibold">SNS</div>
+        <img src="{{ url_for('static', filename='images/logo.png') }}"
+       alt="BeLocal ロゴ"
+       class="w-10 h-10 rounded-full object-cover">
         <span class="text-white font-semibold drop-shadow">BeLocal</span>
       </div>
     </div>
