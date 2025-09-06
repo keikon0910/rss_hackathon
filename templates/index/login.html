@@ -8,7 +8,7 @@
 
 <div class="container">
     <h1>ログイン</h1>
-    <form action="{{ url_for('#') }}" method="post" class="login-form">
+    <form  method="post" class="login-form">
         <label for="username">ユーザー名</label>
         <input type="text" name="u_name" required>
 
@@ -22,17 +22,17 @@
 
     
     <div class="button-area">
-        <a href="{{ url_for('#') }}" class="back-link">← 戻る</a>
+        <a class="back-link">← 戻る</a>
     </div>
 
     <p class="note">
         すでにアカウントをお持ちでない方は
-        <a href="{{ url_for('#') }}">こちら</a> から新規登録
+        <a >こちら</a> から新規登録
     </p>
 
     <p class="note">
         パスワードを忘れた方は
-        <a href="{{ url_for('#') }}">こちら</a> から再登録
+        <a >こちら</a> から再登録
     </p>
 </div>
 
