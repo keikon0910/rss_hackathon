@@ -55,14 +55,16 @@
       <h1 class="text-xl font-semibold text-center mb-6">アカウント設定</h1>
 
       <form class="space-y-6" action="#" method="post">
-        <!-- ユーザー名 -->
-        <div>
-          <label for="username" class="block text-sm mb-2">ユーザー名</label>
-          <input id="username" name="username" type="text" placeholder="example_user"
-                 class="w-full border border-black/50 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black" />
-        </div>
+      <!-- ユーザー名 -->
+      <div>
+        <label for="username" class="block text-sm mb-2">ユーザー名</label>
+        <input id="username" name="username" type="text"
+              value="{{ user.display_name if user.display_name else '' }}"
+              class="w-full border border-black/50 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black" />
+      </div>
 
-        <!-- 公開 / 非公開 -->
+
+        <!-- 公開 / 非公開（残す） -->
         <fieldset>
           <legend class="block text-sm mb-2">公開 / 非公開</legend>
           <label class="relative inline-flex items-center cursor-pointer select-none">
@@ -74,18 +76,22 @@
         </fieldset>
 
         <!-- ユーザーのGmail -->
+        <!-- ユーザーのGmail -->
         <div>
           <label for="email" class="block text-sm mb-2">ユーザーのGmail</label>
-          <input id="email" name="email" type="email" placeholder="you@example.com"
-                 class="w-full border border-black/50 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black" />
+            <input id="email" name="email" type="email"
+                  value="{{ user.email if user.email else '' }}"
+                  class="w-full border border-black/50 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black" />
         </div>
 
         <!-- アカウント作成日（表示のみ） -->
         <div>
           <label class="block text-sm mb-2">アカウント作成日</label>
-          <input id="created_at" type="text" placeholder="YYYY年M月D日" readonly
-                 class="w-full border border-black/50 rounded px-3 py-2 bg-white text-black/80" />
+          <input id="created_at" type="text" readonly
+                value="{{ user.created_at.strftime('%Y年%-m月%-d日') if user.created_at else '' }}"
+                class="w-full border border-black/50 rounded px-3 py-2 bg-white text-black/80" />
         </div>
+
 
         <!-- Actions -->
         <div class="flex items-center justify-end gap-3 pt-2">
