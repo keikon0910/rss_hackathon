@@ -14,9 +14,90 @@ let lastUserPos = null;
 // ====== ユーティリティ ======
 function popupHTML(feature) {
   const name = feature.properties?.name ?? "ランドマーク";
-  return `<strong>${name}</strong>`;
+  let html = `<strong>${name}</strong>`;
+  if (feature.properties?.created_at) {
+    const createdAt = new Date(feature.properties.created_at);
+    html += `<br><small>作成日: ${createdAt.toLocaleString()}</small>`;
+  }
+  return html;
 }
 
+// ====== ランドマーククリック時の処理 ======
+function onLandmarkClick(feature) {
+  const name = feature.properties?.name ?? "ランドマーク";
+  const createdAtStr = feature.properties?.created_at ?? null;
+  const createdAtText = createdAtStr ? new Date(createdAtStr).toLocaleString() : "作成日情報なし";
+
+  // 情報表示
+  const infoP = document.getElementById("landmark-info");
+  if (infoP) infoP.textContent = `${name}（作成日: ${createdAtText}）`;
+
+  // 下パネル表示
+  const panel = document.getElementById("landmark-panel");
+  if (panel) panel.classList.remove("hidden");
+
+  // 「この場所に投稿する」リンク
+  const postLink = document.getElementById("postLink");
+  if (postLink) {
+    postLink.href = `/photograph/post?landmark_id=${feature.id}`;
+    postLink.style.display = "inline-block";
+  }
+
+  // 「この場所の投稿を見る」リンク初期設定（無効化）
+  const readLink = document.getElementById("readLink");
+  if (readLink) {
+    readLink.dataset.href = `/others/others_post/${feature.id}`; // 後で有効化用
+    readLink.href = "#";
+    readLink.style.pointerEvents = "none"; // クリック無効化
+    readLink.style.opacity = "0.5";       // グレーアウト
+    readLink.style.display = "inline-block";
+  }
+
+  // ユーザーがランドマーク内ならリンク有効化
+  if (lastUserPos && readLink) {
+    const { lat, lon, acc } = lastUserPos;
+    const inside = checkInsideAny(lon, lat, acc).some(f => f.id === feature.id);
+    if (inside) {
+      readLink.style.pointerEvents = "auto";
+      readLink.style.opacity = "1";
+      readLink.href = readLink.dataset.href;
+    }
+  }
+}
+
+// ====== CTA切替（青いボタン or メッセージ） ======
+function setCTA(matches) {
+  const linkEl = document.getElementById("cta-link");
+  const nameEl = document.getElementById("cta-name");
+  const msgEl = document.getElementById("cta-msg");
+  const readLink = document.getElementById("readLink");
+
+  if (!linkEl || !nameEl || !msgEl || !readLink) return;
+
+  if (matches.length > 0) {
+    const f = matches[0];
+    const name = f.properties?.name ?? "ランドマーク";
+    nameEl.textContent = name;
+    linkEl.href = `/photograph/post?landmark_id=${f.id}`;
+    linkEl.style.display = "inline-block";
+    msgEl.style.display = "none";
+
+    // 投稿閲覧リンクも有効化
+    readLink.style.pointerEvents = "auto";
+    readLink.style.opacity = "1";
+    readLink.href = readLink.dataset.href ?? "#";
+  } else {
+    linkEl.style.display = "none";
+    msgEl.style.display = "inline";
+
+    // 投稿閲覧リンク無効化
+    readLink.style.pointerEvents = "none";
+    readLink.style.opacity = "0.5";
+    readLink.href = "#";
+  }
+}
+
+// ====== ユーザー位置マーカー更新 ======
 function updateUserMarker(lat, lon, acc) {
   const latlng = [lat, lon];
   if (!userMarker) {
@@ -32,7 +113,7 @@ function updateUserMarker(lat, lon, acc) {
   }
 }
 
-// CTA（青いボタン or メッセージ）を切り替え
+// ====== CTA切替（青いボタン or メッセージ） ======
 function setCTA(matches) {
   const linkEl = document.getElementById("cta-link");
   const nameEl = document.getElementById("cta-name");
@@ -44,8 +125,6 @@ function setCTA(matches) {
     const f = matches[0];
     const name = f.properties?.name ?? "ランドマーク";
     nameEl.textContent = name;
-
-    // Flask 側の投稿ページへ。landmark_id はクエリに追加
     linkEl.href = `/photograph/post?landmark_id=${f.id}`;
     linkEl.style.display = "inline-block";
     msgEl.style.display = "none";
@@ -55,55 +134,44 @@ function setCTA(matches) {
   }
 }
 
-// 点がランドマーク内か判定
+// ====== ランドマーク内判定 ======
 function checkInsideAny(lon, lat, accuracyMeters = 30) {
   if (!landmarksGeoJSON || !landmarksGeoJSON.features) return [];
   const pt = turf.point([lon, lat]);
   const bufferKm = Math.max(accuracyMeters, 30) / 1000;
-
-  console.log("ユーザー位置:", [lon, lat]); // ← ここで現在位置を出力
-
   const hits = [];
+
   for (const f of landmarksGeoJSON.features) {
     let inside = false;
     try {
-      inside = turf.booleanPointInPolygon(pt, f); // ポリゴン内判定
+      inside = turf.booleanPointInPolygon(pt, f);
       if (!inside) {
         const buffered = turf.buffer(f, bufferKm, { units: "kilometers" });
-        inside = turf.booleanPointInPolygon(pt, buffered); // 精度分の余裕も判定
+        inside = turf.booleanPointInPolygon(pt, buffered);
       }
     } catch (_) {}
-
-    console.log(`ランドマーク "${f.properties?.name}" 内判定:`, inside); // ← 判定結果を出力
-
     if (inside) hits.push(f);
   }
 
-  console.log("判定結果（ヒットしたランドマーク）:", hits); // ← 最終結果を出力
-  return hits; // ランドマーク内なら配列に入れる
+  return hits;
 }
 
-
-// ====== ランドマークを読み込んで描画 ======
+// ====== ランドマーク読み込み ======
 async function loadLandmarks() {
   try {
     const res = await fetch("/api/landmarks");
     const geojson = await res.json();
 
-    // ★ここでブラウザのコンソールに表示
-    console.log("取得したランドマークデータ:", geojson);
-
-    if (!geojson || geojson.type !== "FeatureCollection") {
-      console.error("Invalid /api/landmarks payload:", geojson);
-      return;
-    }
-
+    if (!geojson || geojson.type !== "FeatureCollection") return;
     landmarksGeoJSON = geojson;
 
     if (landmarkLayer) map.removeLayer(landmarkLayer);
     landmarkLayer = L.geoJSON(geojson, {
       style: { color: "#2563eb", weight: 2, fillOpacity: 0.15 },
-      onEachFeature: (f, layer) => layer.bindPopup(popupHTML(f)),
+      onEachFeature: (f, layer) => {
+        layer.bindPopup(popupHTML(f));
+        layer.on("click", () => onLandmarkClick(f));
+      },
     }).addTo(map);
 
     const b = landmarkLayer.getBounds();
@@ -118,8 +186,6 @@ async function loadLandmarks() {
   }
 }
 
-loadLandmarks();
-
 // ====== Geolocation ======
 function onGeoSuccess(pos) {
   const { latitude, longitude, accuracy } = pos.coords;
@@ -129,7 +195,6 @@ function onGeoSuccess(pos) {
 }
 
 function onGeoError(err) {
-  console.warn("Geolocation error:", err);
   const msgEl = document.getElementById("cta-msg");
   if (msgEl) msgEl.textContent = `位置情報が取得できません（${err.message}）`;
 }
@@ -144,3 +209,6 @@ if (navigator.geolocation) {
   const msgEl = document.getElementById("cta-msg");
   if (msgEl) msgEl.textContent = "この端末は位置情報に未対応です";
 }
+
+// ====== 初期化 ======
+loadLandmarks();
