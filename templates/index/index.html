@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BeLocal | 新感覚SNS</title>
+  <title>Logation | 新感覚SNS</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -12,7 +12,7 @@
                    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
     }
 
-    /* 中央 BeLocal 出現 */
+    /* 中央 Logation 出現 */
     @keyframes popIn {
       0%   { opacity: 0; transform: scale(.85); }
       60%  { opacity: 1; transform: scale(1.06); }
@@ -49,18 +49,18 @@
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center">
       <div id="brandHeader" class="flex items-center gap-2 opacity-0 transition-opacity duration-700">
         <img src="{{ url_for('static', filename='images/logo.png') }}"
-       alt="BeLocal ロゴ"
+       alt="Logation ロゴ"
        class="w-10 h-10 rounded-full object-cover">
-        <span class="text-white font-semibold drop-shadow">BeLocal</span>
+        <span class="text-white font-semibold drop-shadow">Logation</span>
       </div>
     </div>
   </header>
 
-  <!-- スプラッシュ：中央 BeLocal -->
+  <!-- スプラッシュ：中央 Logation -->
   <div id="splashHost" class="fixed inset-0 z-30 grid place-items-center pointer-events-none">
     <div id="brandSplash"
          class="text-5xl md:text-6xl font-bold text-white drop-shadow animate-popIn">
-      BeLocal
+      Logation
     </div>
   </div>
 
@@ -108,7 +108,7 @@
       const descBox = document.getElementById('descBox');
       const btnBox  = document.getElementById('btnBox');
 
-      // 1) BeLocalを出して少し待つ
+      // 1) Logationを出して少し待つ
       setTimeout(() => {
         splash.classList.add('animate-fadeOut');
         // 2) フェードアウト後にヘッダーを表示
