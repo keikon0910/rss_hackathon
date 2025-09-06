@@ -52,6 +52,18 @@
 
     <!-- 右側アクション（DM/通知はダミー）-->
     <div class="flex items-start gap-2">
+
+      <!-- 🔍 検索ボタン -->
+<button class="p-2 rounded-full hover:bg-gray-100 transition" aria-label="Search">
+  <a href="{{ url_for('personal_page.search_users') }}">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <circle cx="11" cy="11" r="7" stroke-width="1.5"/>
+      <line x1="16.65" y1="16.65" x2="21" y2="21" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </a>
+</button>
+
+
 <!-- DM（封筒） -->
 <button class="p-2 rounded-full hover:bg-gray-100 transition" aria-label="DM">
   <a href="{{url_for('subfunction.DM')}}">
@@ -84,11 +96,11 @@
         <span class="text-xs text-gray-500">投稿</span>
       </div>
       <div class="grid">
-        <strong id="followers" class="text-lg font-semibold"></strong>
+        <strong id="followers" class="text-lg font-semibold">{{ followers }}</strong>
         <span class="text-xs text-gray-500">フォロワー</span>
       </div>
       <div class="grid">
-        <strong id="following" class="text-lg font-semibold"></strong>
+        <strong id="following" class="text-lg font-semibold">{{ following }}</strong>
         <span class="text-xs text-gray-500">フォロー中</span>
       </div>
     </div>

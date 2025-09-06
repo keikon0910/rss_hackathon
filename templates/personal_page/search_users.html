@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ユーザー検索 | SNS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans JP', ui-sans-serif, system-ui, -apple-system,
+            BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+            sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; }
+  </style>
+</head>
+<body class="bg-white text-black antialiased">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-black/10">
+    <div class="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+      <a href="{{ url_for('personal_page.personal_page') }}" class="p-1 rounded-full hover:bg-black/5" aria-label="マイページ">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M15.75 19.5 8.25 12l7.5-7.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <h1 class="text-base font-semibold">ユーザー検索</h1>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-2xl mx-auto px-4 py-6">
+    <!-- 🔍 検索フォーム -->
+    <form method="GET" class="mb-6">
+      <div class="flex gap-2">
+        <input type="text" name="username" value="{{ query }}" placeholder="ユーザー名を入力"
+          class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          検索
+        </button>
+      </div>
+    </form>
+
+    <!-- 検索結果 -->
+<!-- 🔹検索結果 -->
+{% if users %}
+  <ul class="divide-y divide-black/10">
+    {% for u in users %}
+    <li class="py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        {% if u.icon %}
+          <img src="{{ u.icon }}" alt="{{ u.name }}" class="w-12 h-12 rounded-full object-cover border border-black/10">
+        {% else %}
+          <div class="w-12 h-12 rounded-full grid place-items-center bg-black/5 text-black/70 border border-black/10">
+            <span class="text-sm font-medium">{{ u.name[0]|upper }}</span>
+          </div>
+        {% endif %}
+        <p class="font-medium truncate">{{ u.name }}</p>
+      </div>
+
+      <!-- 🔹 フォローボタン -->
+      <form method="POST">
+        <input type="hidden" name="follow_user_id" value="{{ u.id }}">
+        {% if u.is_followed %}
+          <button type="button" disabled
+            class="px-3 py-1 bg-gray-300 text-black rounded-lg text-sm cursor-not-allowed">
+            フォロー済み
+          </button>
+        {% elif u.is_pending_or_followed %}
+          <button type="button" disabled
+            class="px-3 py-1 bg-gray-300 text-black rounded-lg text-sm cursor-not-allowed">
+            承認待ち
+          </button>
+        {% else %}
+          <button type="submit"
+            class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+            フォロー
+          </button>
+        {% endif %}
+      </form>
+
+    </li>
+    {% endfor %}
+  </ul>
+{% elif query %}
+  <p class="text-sm text-gray-500 mt-6">該当するユーザーはいません。</p>
+{% endif %}
+
+  </main>
+</body>
+</html>
