@@ -81,13 +81,15 @@ def personal_page():
 
     user_data = {}
     posts = []
-    post_count = 0  # ← 投稿数用の変数
+    post_count = 0
+    followers_count = 0
+    following_count = 0
 
     try:
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # ユーザー情報取得
+        # ユーザー情報
         cur.execute("SELECT display_name, icon FROM users WHERE id=%s", (session['user_id'],))
         row = cur.fetchone()
         if row:
@@ -96,7 +98,7 @@ def personal_page():
                 'icon': row[1] or ''
             }
 
-        # 投稿一覧取得
+        # 投稿一覧
         cur.execute("""
             SELECT id, title, image_url, created_at
             FROM posts
@@ -104,18 +106,30 @@ def personal_page():
             ORDER BY created_at DESC
         """, (session['user_id'],))
         posts = [
-            {
-                'id': r[0],
-                'title': r[1],
-                'image_url': r[2],
-                'created_at': r[3].strftime("%Y/%m/%d %H:%M")
-            }
+            {'id': r[0], 'title': r[1], 'image_url': r[2], 'created_at': r[3].strftime("%Y/%m/%d %H:%M")}
             for r in cur.fetchall()
         ]
 
-        # 🔹 投稿数取得
+        # 投稿数
         cur.execute("SELECT COUNT(*) FROM posts WHERE user_id=%s", (session['user_id'],))
         post_count = cur.fetchone()[0]
+
+        # フォロー数とフォロワー数
+        current_user_id = session['user_id']
+
+        # 自分がフォローしている人数
+        cur.execute("""
+            SELECT COUNT(*) FROM user_follow uf
+            WHERE uf.follower_uid = %s
+        """, (current_user_id,))
+        following_count = cur.fetchone()[0]
+
+        # 自分をフォローしている人数
+        cur.execute("""
+            SELECT COUNT(*) FROM user_follow uf
+            WHERE uf.followee_uid = %s
+        """, (current_user_id,))
+        followers_count = cur.fetchone()[0]
 
         cur.close()
         conn.close()
@@ -123,7 +137,14 @@ def personal_page():
     except Exception as e:
         flash(f"データ取得エラー: {e}", "error")
 
-    return render_template('personal_page.html', user=user_data, posts=posts, post_count=post_count)
+    return render_template(
+        'personal_page.html',
+        user=user_data,
+        posts=posts,
+        post_count=post_count,
+        followers=followers_count,
+        following=following_count
+    )
 
 
 @personal_page_bp.route('/personal_setting')
