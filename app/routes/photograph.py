@@ -1,5 +1,4 @@
-from flask import Blueprint, render_template , session, redirect, url_for, flash , request
-from werkzeug.security import check_password_hash
+from flask import Blueprint, render_template, session, redirect, url_for, flash, request
 import psycopg2
 from datetime import datetime
 import base64
@@ -21,16 +20,7 @@ DB_PARAMS = {
 }
 
 def get_db_connection():
-    conn = psycopg2.connect(**DB_PARAMS)
-    return conn
-
-@photograph_bp.route('/post_past')
-def post_past():
-    if 'user_id' not in session:
-        flash("ログインが必要です", "error")
-        return redirect(url_for('index.login'))
-    return render_template('post_past.html')
-
+    return psycopg2.connect(**DB_PARAMS)
 
 @photograph_bp.route('/post', methods=['GET', 'POST'])
 def post():
@@ -42,16 +32,16 @@ def post():
         title = request.form.get('title')
         photo = request.files.get('photo')
 
-        if not title or not photo:
-            flash("タイトルと写真をアップロードしてください", "error")
+        # 入力チェック
+        if not title:
+            flash("タイトルを入力してください", "error")
             return render_template('post.html')
 
         try:
-            # 画像をBase64エンコード
-            photo_data = photo.read()
-            image_base64 = base64.b64encode(photo_data).decode('utf-8')
 
-            # DBにINSERT
+
+
+            # DB登録
             conn = get_db_connection()
             cur = conn.cursor()
             cur.execute("""
@@ -60,7 +50,6 @@ def post():
             """, (
                 session['user_id'],
                 title,
-                image_base64,
                 datetime.utcnow()
             ))
             conn.commit()
@@ -70,7 +59,9 @@ def post():
             flash("投稿が完了しました！", "success")
             return redirect(url_for('home.home'))
 
+        except psycopg2.Error as db_err:
+            flash(f"データベースエラー: {db_err.pgerror}", "error")
         except Exception as e:
-            flash(f"エラーが発生しました: {e}", "error")
+            flash(f"予期しないエラー: {e}", "error")
 
     return render_template('post.html')

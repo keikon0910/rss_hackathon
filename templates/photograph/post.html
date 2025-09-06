@@ -11,6 +11,23 @@
   </style>
 </head>
 <body class="bg-white text-black antialiased">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="mb-4">
+      {% for category, message in messages %}
+        <div class="p-3 rounded-lg text-sm 
+                    {% if category == 'error' %} bg-red-100 text-red-800 
+                    {% elif category == 'success' %} bg-green-100 text-green-800 
+                    {% else %} bg-gray-100 text-gray-800 {% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+
   <div class="min-h-screen flex flex-col">
 
     <!-- ヘッダー -->
