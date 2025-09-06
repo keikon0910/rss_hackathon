@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title or "SNS" }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-black">
+  <!-- 共通ヘッダー -->
+  <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+      <!-- ロゴ（ホームへリンク） -->
+      <a href="{{ url_for('home') }}" class="flex items-center gap-2 font-extrabold tracking-tight">
+        <span class="w-9 h-9 rounded-full bg-blue-100 grid place-items-center">SNS</span>
+        <span>Social</span>
+      </a>
+      <nav class="ml-auto">
+        <ul class="flex items-center gap-4 font-semibold">
+          <li><a href="{{ url_for('home') }}" class="hover:underline">ホーム</a></li>
+          <li><a href="{{ url_for('post') }}" class="hover:underline">投稿</a></li>
+          <li><a href="{{ url_for('personal_page') }}" class="hover:underline">マイページ</a></li>
+          <!-- 右上のハンバーガー（設定へリンク） -->
+          <li>
+            <a href="{{ url_for('personal_settings') }}"
+               class="w-9 h-9 rounded-full border border-gray-300 grid place-items-center hover:bg-gray-50">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="6.5" x2="21" y2="6.5"/>
+                <line x1="3" y1="12"  x2="21" y2="12"/>
+                <line x1="3" y1="17.5" x2="21" y2="17.5"/>
+              </svg>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 各ページのコンテンツ -->
+  <main class="max-w-5xl mx-auto px-4 py-6">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
