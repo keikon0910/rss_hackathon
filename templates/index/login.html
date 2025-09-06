@@ -31,9 +31,13 @@
 
       <!-- 左上のラベル -->
       <div class="absolute top-6 left-6 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-white/70 grid place-items-center text-xs font-semibold shadow-sm">SNS</div>
-        <span class="text-white font-semibold drop-shadow">Social</span>
-      </div>
+  <!-- 背景をつけずにロゴを丸く表示 -->
+  <img src="{{ url_for('static', filename='images/logo.png') }}"
+       alt="BeLocal ロゴ"
+       class="w-10 h-10 rounded-full object-cover">
+
+  <span class="text-white font-semibold drop-shadow">BeLocal</span>
+</div>
     </aside>
 
     <!-- 右：フォーム -->
