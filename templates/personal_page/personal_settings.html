@@ -25,12 +25,11 @@
         <div class="w-9 h-9 rounded-full bg-blue-100 grid place-items-center">SNS</div>
         <span>Social</span>
       </div>
-      <!-- ▼ ここを遷移先に変更 -->
       <nav class="ml-auto">
         <ul class="flex items-center gap-4 font-semibold">
-          <li><a href="home.html" class="px-2 py-1 hover:underline">ホーム</a></li>
-          <li><a href="post.html" class="px-2 py-1 hover:underline">投稿</a></li>
-          <li><a href="personal_page.html" class="px-2 py-1 hover:underline">マイページ</a></li>
+          <li><a href="{{ url_for('home.home') }}" class="px-2 py-1 hover:underline">ホーム</a></li>
+          <li><a href="#" class="px-2 py-1 hover:underline">投稿</a></li>
+          <li><a href="{{ url_for('personal_page.personal_page') }}" class="px-2 py-1 hover:underline">マイページ</a></li>
         </ul>
       </nav>
     </div>
@@ -117,6 +116,10 @@
           const reader = new FileReader();
           reader.onload = (evt) => { img.src = evt.target.result || ''; };
           reader.readAsDataURL(file);
+
+          // 任意：/api/user/icon にアップロードしたい場合（API実装済みなら有効化）
+          // const fd = new FormData(); fd.append('file', file);
+          // fetch('/api/user/icon', { method:'POST', body: fd, credentials:'include' });
         });
       }
     })();
@@ -125,6 +128,8 @@
     (function(){
       const $ = (id) => document.getElementById(id);
       const usernameEl = $('username');
+      const emailEl    = $('email');
+      const privacyEl  = $('privacy');
       const createdAtEl = $('created_at');
 
       const formatJP = (s) => {
@@ -139,8 +144,12 @@
           if (!res.ok) throw new Error('Failed to fetch user');
           const data = await res.json();
           if (data.username) usernameEl.value = data.username;
+          if (data.email)    emailEl.value    = data.email;
+          if (typeof data.is_public === 'boolean') {
+            // UIは「非公開にする」チェックなので反転
+            privacyEl.checked = !data.is_public;
+          }
           if (data.created_at) createdAtEl.value = formatJP(data.created_at);
-          // もし data.avatar_url が返るなら初期アイコンに反映
           const avatar = document.getElementById('avatarPreview');
           if (data.avatar_url && avatar) avatar.src = data.avatar_url;
         } catch (e) {
@@ -150,19 +159,53 @@
       loadUser();
     })();
 
-    // ▼ ログアウト処理：サーバのログアウトAPIがあれば叩き、最後に index.html へ遷移
+    // フォーム送信 → /api/user/me に保存
+    (function(){
+      const form = document.querySelector('form');
+      const usernameEl = document.getElementById('username');
+      const emailEl    = document.getElementById('email');
+      const privacyEl  = document.getElementById('privacy');
+
+      if (!form) return;
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          username: (usernameEl.value || '').trim(),
+          email:    (emailEl.value || '').trim(),
+          is_public: !privacyEl.checked
+        };
+        try {
+          const res = await fetch('/api/user/me', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json().catch(()=>({}));
+          if (!res.ok || data.ok === false) {
+            alert((data && data.message) || '保存に失敗しました');
+            return;
+          }
+          alert('保存しました');
+        } catch (err) {
+          console.error(err);
+          alert('通信エラーが発生しました');
+        }
+      });
+    })();
+
+    // ▼ ログアウト処理
     (function(){
       const btn = document.getElementById('logoutBtn');
       if(!btn) return;
       btn.addEventListener('click', async () => {
         try {
-          // アプリで使っているトークン等があればここでクリア
           localStorage.clear();
           sessionStorage.clear();
-          // サーバー側APIがある場合はPOST（無くてもエラーは無視して遷移）
           await fetch('/api/logout', { method:'POST', credentials:'include' }).catch(()=>{});
         } finally {
-          location.href = 'index.html';
+          location.href = '{{ url_for("index.index") }}';
         }
       });
     })();
