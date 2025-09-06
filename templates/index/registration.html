@@ -9,7 +9,7 @@
 <div class="container">
     <h1>新規登録</h1>
 
-    <form action="{{ url_for('#') }}" method="post" class="register-form">
+    <form  method="post" class="register-form">
         <label for="u_name">ユーザー名</label>
         <input type="text" id="u_name" name="u_name" required>
     
@@ -30,12 +30,12 @@
 
     <!-- ✅ aタグで戻る -->
     <div class="button-area">
-        <a href="{{ url_for('#') }}" class="back-link">← 戻る</a>
+        <a href="{{url_for('index.index')}}" class="back-link">← 戻る</a>
     </div>
 
     <p class="note">
         すでにアカウントをお持ちの方は
-        <a href="{{ url_for('#') }}">こちら</a> からログイン
+        <a href="{{ url_for('index.login') }}">こちら</a> からログイン
     </p>
 
 </div>
