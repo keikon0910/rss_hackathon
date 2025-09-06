@@ -1,7 +1,8 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ランドマーク {{ landmark_id }} の投稿</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -10,23 +11,28 @@
 <h1 class="text-2xl font-bold mb-4">ランドマーク {{ landmark_id }} の投稿一覧</h1>
 
 {% if posts %}
-    {% for post in posts %}
-        <div class="border p-4 mb-4 rounded shadow-sm bg-white">
-        <h3 class="text-lg font-bold">{{ post.title }}</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+  {% for post in posts %}
+  <div class="border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white hover:shadow-md transition">
+    <a href="{{ url_for('photograph.past_post', post_id=post.id) }}">
+      {% if post.image_url %}
+      <img src="data:image/*;base64,{{ post.image_url }}" alt="投稿画像" class="w-full h-40 object-cover">
+      {% else %}
+      <div class="w-full h-40 bg-gray-200 grid place-items-center text-gray-500">No Image</div>
+      {% endif %}
+      <div class="p-3">
+        <h2 class="font-semibold text-gray-800 truncate">{{ post.title }}</h2>
+        <p class="text-xs text-gray-500 mt-1">{{ post.created_at }}</p>
         {% if post.body %}
-            <p class="mt-2">{{ post.body }}</p>
-        {% else %}
-            <p class="mt-2 text-gray-400 italic">本文はありません</p>
+        <p class="text-sm text-gray-700 mt-1">{{ post.body }}</p>
         {% endif %}
-        {% if post.image_url %}
-            <img src="{{ post.image_url }}" alt="{{ post.title }}" class="mt-2 rounded">
-        {% endif %}
-        <small class="text-gray-500">投稿日: {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-        </div>
-    {% endfor %}
-
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
 {% else %}
-  <p class="text-gray-500">このランドマークにはまだ投稿がありません。</p>
+<p class="text-gray-500">このランドマークにはまだ投稿がありません。</p>
 {% endif %}
 
 <a href="{{ url_for('home.home') }}" class="inline-block mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
