@@ -23,33 +23,12 @@ def get_db_connection():
     return psycopg2.connect(**DB_PARAMS)
 
 
-@photograph_bp.route('/personal_page')
-def personal_page():
+@photograph_bp.route('/past_post')
+def past_post():
     if 'user_id' not in session:
         flash("ログインが必要です", "error")
         return redirect(url_for('index.login'))
-
-    user_data = {}
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT display_name, icon
-            FROM users
-            WHERE id = %s
-        """, (session['user_id'],))
-        row = cur.fetchone()
-        if row:
-            user_data = {
-                'display_name': row[0],
-                'icon': row[1] if row[1] else ''
-            }
-        cur.close()
-        conn.close()
-    except Exception as e:
-        flash(f"ユーザー情報の取得に失敗しました: {e}", "error")
-
-    return render_template('personal_page.html', user=user_data)
+    return render_template('past_post.html')
 
 
 @photograph_bp.route('/post', methods=['GET', 'POST'])
@@ -60,7 +39,7 @@ def post():
 
     if request.method == 'POST':
         title = request.form.get('title')
-        photo = request.files.get('photo')
+        photo = request.files.get('photo')  # 画像取得
 
         # タイトル必須チェック
         if not title:
@@ -68,7 +47,7 @@ def post():
             return render_template('post.html')
 
         try:
-            # 画像のBase64変換（画像がない場合はNone）
+            # 画像を Base64 文字列に変換
             image_base64 = None
             if photo and photo.filename != '':
                 photo_data = photo.read()
@@ -84,7 +63,7 @@ def post():
             """, (
                 session['user_id'],
                 title,
-                image_base64,  # 画像がなければNULL
+                image_base64,  # 画像があれば Base64、なければ NULL
                 datetime.utcnow()
             ))
             conn.commit()

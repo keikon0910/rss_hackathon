@@ -51,12 +51,72 @@ DB_PARAMS = {
 def get_db_connection():
     return psycopg2.connect(**DB_PARAMS)
 
+from flask import Blueprint, render_template, session, redirect, url_for, flash
+import psycopg2
+from datetime import datetime
+
+personal_page_bp = Blueprint(
+    'personal_page',
+    __name__,
+    template_folder='../../templates/personal_page',
+    url_prefix=''
+)
+
+DB_PARAMS = {
+    "dbname": "posts_db_rkcz",
+    "user": "posts_db_rkcz_user",
+    "password": "rPcuE4VPsn79TPngWJd8ZAQrDF1ktI7F",
+    "host": "dpg-d2top2p5pdvs739pct1g-a.oregon-postgres.render.com",
+    "port": "5432"
+}
+
+def get_db_connection():
+    return psycopg2.connect(**DB_PARAMS)
+
+
 @personal_page_bp.route('/personal_page')
 def personal_page():
     if 'user_id' not in session:
         flash("ログインが必要です", "error")
         return redirect(url_for('index.login'))
-    return render_template('personal_page.html')
+
+    user_data = {}
+    posts = []
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # ユーザー情報取得
+        cur.execute("SELECT display_name, icon FROM users WHERE id=%s", (session['user_id'],))
+        row = cur.fetchone()
+        if row:
+            user_data = {
+                'display_name': row[0],
+                'icon': row[1] or ''
+            }
+
+        # 投稿一覧取得
+        cur.execute("""
+            SELECT title, image_url, created_at
+            FROM posts
+            WHERE user_id=%s
+            ORDER BY created_at DESC
+        """, (session['user_id'],))
+        posts = [
+            {
+                'title': r[0],
+                'image_url': r[1],
+                'created_at': r[2].strftime("%Y/%m/%d %H:%M")
+            }
+            for r in cur.fetchall()
+        ]
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        flash(f"データ取得エラー: {e}", "error")
+
+    return render_template('personal_page.html', user=user_data, posts=posts)
 
 @personal_page_bp.route('/personal_setting')
 def personal_setting():
