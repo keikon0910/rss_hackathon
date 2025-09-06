@@ -240,6 +240,8 @@ function setupLandmarkClickEvents() {
   });
 }
 
+
+
 // landmarks を読み込んだ後に呼び出す
 loadLandmarks().then(() => {
   setupLandmarkClickEvents();
