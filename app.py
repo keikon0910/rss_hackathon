@@ -1,4 +1,4 @@
-from app.routes import create_app
+from app.routes import create_app   # ← app.routes でOK
 
 app = create_app()
 
