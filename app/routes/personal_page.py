@@ -97,19 +97,21 @@ def personal_page():
 
         # 投稿一覧取得
         cur.execute("""
-            SELECT title, image_url, created_at
+            SELECT id, title, image_url, created_at
             FROM posts
             WHERE user_id=%s
             ORDER BY created_at DESC
         """, (session['user_id'],))
         posts = [
             {
-                'title': r[0],
-                'image_url': r[1],
-                'created_at': r[2].strftime("%Y/%m/%d %H:%M")
+                'id': r[0],
+                'title': r[1],
+                'image_url': r[2],
+                'created_at': r[3].strftime("%Y/%m/%d %H:%M")
             }
             for r in cur.fetchall()
         ]
+
 
         cur.close()
         conn.close()
