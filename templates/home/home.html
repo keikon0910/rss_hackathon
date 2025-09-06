@@ -3,53 +3,53 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Logation — 場所でつながる</title>
-
+  <title>BeLocal — 場所でつながる</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <style>
     #map { width: 100%; height: 70vh; }
-
     body {
-    font-family: 'Noto Sans JP', ui-sans-serif, system-ui, -apple-system,
-                 BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
-                 Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
-                 "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  }
-
+      font-family: 'Noto Sans JP', ui-sans-serif, system-ui, -apple-system,
+                   BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+                   Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+                   "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    }
   </style>
 </head>
 <body class="bg-zinc-50">
   <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
-  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-    <!-- ロゴ -->
-    <div class="flex items-center gap-2 font-extrabold tracking-tight">
-      <img src="{{ url_for('static', filename='images/logo.png') }}"
-       alt="Logation ロゴ"
-       class="w-10 h-10 rounded-full object-cover">
-        <span class="text-black font-semibold drop-shadow">Logation</span>
-    </div>
-
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+      <div class="flex items-center gap-2 font-extrabold tracking-tight">
+        <div class="w-9 h-9 rounded-full bg-blue-100 grid place-items-center">SNS</div>
+        <span>Social</span>
+      </div>
+      <!-- CTA（href は後で JS で上書きする） -->
+      <div id="post-cta" class="ml-4 text-sm text-gray-600">
+        <a id="cta-link"
+           href="#"
+           style="display:none;padding:10px 14px;border-radius:8px;background:#2563eb;color:#fff;text-decoration:none;">
+          この場所（<span id="cta-name">ランドマーク</span>）で投稿
+        </a>
+        <span id="cta-msg" style="color:#666;">近くのランドマーク内ではありません</span>
+      </div>
       <nav class="ml-auto">
         <ul class="flex items-center gap-4 font-semibold">
-          <li><a href="{{url_for('home.home')}}" class="px-2 py-1 hover:underline">ホーム</a></li>
-          <li><a href="{{url_for('photograph.post')}}" class="px-2 py-1 hover:underline">投稿</a></li>
-          <li><a href="{{url_for('personal_page.personal_page')}}" class="px-2 py-1 hover:underline">マイページ</a></li>
+          <li><a href="{{ url_for('home.home') }}" class="px-2 py-1 hover:underline">ホーム</a></li>
+          <!-- ★ id を付ける -->
+          <li><a id="nav-post-link" href="{{ url_for('photograph.post') }}" class="px-2 py-1 hover:underline">投稿</a></li>
+          <li><a href="{{ url_for('personal_page.personal_page') }}" class="px-2 py-1 hover:underline">マイページ</a></li>
         </ul>
       </nav>
-  </div>
-</header>
-
+    </div>
+  </header>
   <main class="max-w-5xl mx-auto px-4">
     <div id="map" class="rounded-xl shadow"></div>
     <p class="text-xs text-gray-500 mt-2">
       ランドマークをクリック → 「この場所で投稿」から投稿ページへ
     </p>
   </main>
-
+  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
   <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 </body>
 </html>
