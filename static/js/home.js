@@ -11,6 +11,9 @@ let userMarker = null;
 let accuracyCircle = null;
 let lastUserPos = null;
 
+// 投稿ページのベースURL（/post になる想定。テンプレから受け取る）
+const postBase = document.body.dataset.postBase || "/post";
+
 // ====== ユーティリティ ======
 function popupHTML(feature) {
   const name = feature.properties?.name ?? "ランドマーク";
@@ -39,61 +42,71 @@ function onLandmarkClick(feature) {
   // 「この場所に投稿する」リンク
   const postLink = document.getElementById("postLink");
   if (postLink) {
-    postLink.href = `/photograph/post?landmark_id=${feature.id}`;
+    postLink.href = `${postBase}?landmark_id=${encodeURIComponent(feature.id)}`;
     postLink.style.display = "inline-block";
   }
 
   // 「この場所の投稿を見る」リンク初期設定（無効化）
   const readLink = document.getElementById("readLink");
   if (readLink) {
-    readLink.dataset.href = `/others/others_post/${feature.id}`; // 後で有効化用
+    readLink.dataset.href = `/others/others_post/${feature.id}`;
     readLink.href = "#";
-    readLink.style.pointerEvents = "none"; // クリック無効化
-    readLink.style.opacity = "0.5";       // グレーアウト
+    readLink.style.pointerEvents = "none";
+    readLink.style.opacity = "0.5";
     readLink.style.display = "inline-block";
   }
 
-  // ユーザーがランドマーク内ならリンク有効化
-  if (lastUserPos && readLink) {
+  // ★ ユーザーがそのランドマーク内にいる場合のみ投稿可能にする
+  if (lastUserPos) {
     const { lat, lon, acc } = lastUserPos;
     const inside = checkInsideAny(lon, lat, acc).some(f => f.id === feature.id);
-    if (inside) {
+
+    if (!inside && postLink) {
+      // ランドマーク外 → 投稿ボタンを隠す
+      postLink.style.display = "none";
+    }
+
+    if (inside && readLink) {
       readLink.style.pointerEvents = "auto";
       readLink.style.opacity = "1";
       readLink.href = readLink.dataset.href;
     }
   }
 }
-
 // ====== CTA切替（青いボタン or メッセージ） ======
 function setCTA(matches) {
-  const linkEl = document.getElementById("cta-link");
-  const nameEl = document.getElementById("cta-name");
-  const msgEl = document.getElementById("cta-msg");
+  const linkEl   = document.getElementById("cta-link");
+  const nameEl   = document.getElementById("cta-name");
+  const msgEl    = document.getElementById("cta-msg");
   const readLink = document.getElementById("readLink");
 
-  if (!linkEl || !nameEl || !msgEl || !readLink) return;
+  if (!linkEl || !nameEl || !msgEl) return;
 
   if (matches.length > 0) {
     const f = matches[0];
     const name = f.properties?.name ?? "ランドマーク";
     nameEl.textContent = name;
-    linkEl.href = `/photograph/post?landmark_id=${f.id}`;
-    linkEl.style.display = "inline-block";
-    msgEl.style.display = "none";
+    linkEl.href = `${postBase}?landmark_id=${encodeURIComponent(f.id)}`;
 
-    // 投稿閲覧リンクも有効化
-    readLink.style.pointerEvents = "auto";
-    readLink.style.opacity = "1";
-    readLink.href = readLink.dataset.href ?? "#";
+    // Tailwind で表示制御
+    linkEl.classList.remove("hidden");
+    msgEl.classList.add("hidden");
+
+    if (readLink) {
+      readLink.style.pointerEvents = "auto";
+      readLink.style.opacity = "1";
+      readLink.href = readLink.dataset.href ?? "#";
+    }
   } else {
-    linkEl.style.display = "none";
-    msgEl.style.display = "inline";
+    // ランドマーク外なら投稿ボタンを隠す
+    linkEl.classList.add("hidden");
+    msgEl.classList.remove("hidden");
 
-    // 投稿閲覧リンク無効化
-    readLink.style.pointerEvents = "none";
-    readLink.style.opacity = "0.5";
-    readLink.href = "#";
+    if (readLink) {
+      readLink.style.pointerEvents = "none";
+      readLink.style.opacity = "0.5";
+      readLink.href = "#";
+    }
   }
 }
 
@@ -113,34 +126,13 @@ function updateUserMarker(lat, lon, acc) {
   }
 }
 
-// ====== CTA切替（青いボタン or メッセージ） ======
-function setCTA(matches) {
-  const linkEl = document.getElementById("cta-link");
-  const nameEl = document.getElementById("cta-name");
-  const msgEl = document.getElementById("cta-msg");
-
-  if (!linkEl || !nameEl || !msgEl) return;
-
-  if (matches.length > 0) {
-    const f = matches[0];
-    const name = f.properties?.name ?? "ランドマーク";
-    nameEl.textContent = name;
-    linkEl.href = `/photograph/post?landmark_id=${f.id}`;
-    linkEl.style.display = "inline-block";
-    msgEl.style.display = "none";
-  } else {
-    linkEl.style.display = "none";
-    msgEl.style.display = "inline";
-  }
-}
-
 // ====== ランドマーク内判定 ======
 function checkInsideAny(lon, lat, accuracyMeters = 30) {
   if (!landmarksGeoJSON || !landmarksGeoJSON.features) return [];
   const pt = turf.point([lon, lat]);
-  const bufferKm = Math.max(accuracyMeters, 30) / 1000;
-  const hits = [];
+  const bufferKm = Math.max(accuracyMeters, 30) / 1000; // 30mは最低緩衝
 
+  const hits = [];
   for (const f of landmarksGeoJSON.features) {
     let inside = false;
     try {
@@ -152,21 +144,51 @@ function checkInsideAny(lon, lat, accuracyMeters = 30) {
     } catch (_) {}
     if (inside) hits.push(f);
   }
-
   return hits;
 }
 
 // ====== ランドマーク読み込み ======
+// ====== ランドマーク読み込み ======
 async function loadLandmarks() {
   try {
-    const res = await fetch("/api/landmarks");
-    const geojson = await res.json();
+    const res = await fetch("/api/landmarks", { credentials: "same-origin" });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("landmarks HTTP error:", res.status, text.slice(0, 300));
+      return;
+    }
 
-    if (!geojson || geojson.type !== "FeatureCollection") return;
-    landmarksGeoJSON = geojson;
+    // JSON 解析。失敗時は内容をログ
+    let geojson;
+    try {
+      geojson = await res.json();
+    } catch (e) {
+      const bad = await res.clone().text().catch(() => "");
+      console.error("landmarks JSON parse failed. head:", bad.slice(0, 300));
+      return;
+    }
 
+    // 形チェック
+    if (!geojson || geojson.type !== "FeatureCollection" || !Array.isArray(geojson.features)) {
+      console.error("Invalid /api/landmarks payload:", geojson);
+      return;
+    }
+
+    // --- ここが重要：geometry が文字列なら JSON.parse して正規化 ---
+    const normalized = {
+      ...geojson,
+      features: geojson.features
+        .map(f => {
+          const g = (typeof f.geometry === "string") ? safeParseJSON(f.geometry) : f.geometry;
+          if (!g || !g.type || !g.coordinates) return null; // 壊れた Feature は捨てる
+          return { ...f, geometry: g };
+        })
+        .filter(Boolean)
+    };
+
+    // 0件でも地図を初期化だけはする
     if (landmarkLayer) map.removeLayer(landmarkLayer);
-    landmarkLayer = L.geoJSON(geojson, {
+    landmarkLayer = L.geoJSON(normalized, {
       style: { color: "#2563eb", weight: 2, fillOpacity: 0.15 },
       onEachFeature: (f, layer) => {
         layer.bindPopup(popupHTML(f));
@@ -175,8 +197,9 @@ async function loadLandmarks() {
     }).addTo(map);
 
     const b = landmarkLayer.getBounds();
-    if (b.isValid()) map.fitBounds(b.pad(0.2));
+    if (b && b.isValid()) map.fitBounds(b.pad(0.2));
 
+    // 直前の位置情報があれば CTA 再評価
     if (lastUserPos) {
       const { lat, lon, acc } = lastUserPos;
       setCTA(checkInsideAny(lon, lat, acc));
@@ -185,6 +208,11 @@ async function loadLandmarks() {
     console.error("Failed to load landmarks:", e);
   }
 }
+
+function safeParseJSON(s) {
+  try { return JSON.parse(s); } catch { return null; }
+}
+
 
 // ====== Geolocation ======
 function onGeoSuccess(pos) {
